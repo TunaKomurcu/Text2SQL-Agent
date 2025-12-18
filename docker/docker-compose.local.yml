@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  db_local:
+    image: postgres:15
+    container_name: text2sql_db_local
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: defaultdb
+    volumes:
+      - postgres_data_local:/var/lib/postgresql/data
+      - ./init_db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d defaultdb -h localhost || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant_local:
+    image: qdrant/qdrant:latest
+    container_name: text2sql_qdrant_local
+    environment:
+      QDRANT__SERVICE__GRPC: "false"
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_storage_local:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6333/collections || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data_local:
+  qdrant_storage_local:

@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Environment variables (ÖNEMLI: .env asla commit edilmemeli!)
+.env
+.env.local
+.env.production
+
+# Model files (çok büyük dosyalar)
+models/*.gguf
+models/*.model
+models/*.npy
+models/*.joblib
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test dosyaları (GitHub'a gitmeyecek)
+test_*.py
+check_*.py
+verify_*.py
+query_test*.py
+analyze_*.py
+list_*.py
+find_*.py
+clean_*.py
+validate_*.py
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Qdrant data
+qdrant_data/
+
+# Temporary files
+*.tmp
+*.bak
+.pytest_cache/

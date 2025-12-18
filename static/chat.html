@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text2SQL Asistanı</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Light Mode Colors */
+      --primary-color: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #dbeafe;
+      --bg-color: #f8fafc;
+      --surface-color: #ffffff;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --border-color: #e2e8f0;
+      --error-color: #ef4444;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-lg: 16px;
+      
+      /* Animation Variables */
+      --transition-fast: 0.15s ease;
+      --transition: 0.3s ease;
+    }
+
+    /* Dark Mode Colors */
+    [data-theme="dark"] {
+      --bg-color: #0f172a;
+      --surface-color: #1e293b;
+      --text-primary: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --border-color: #334155;
+      --primary-light: #1e40af;
+      --primary-color: #3b82f6;
+      --primary-dark: #2563eb;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-primary);
+      line-height: 1.6;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: background-color var(--transition), color var(--transition);
+    }
+
+    /* Header Styles - STICKY HEADER */
+    header {
+      background: var(--surface-color);
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: var(--shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      transition: all var(--transition);
+      position: sticky;
+      top: 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--text-primary);
+    }
+
+    .logo-icon {
+      background: var(--primary-color);
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .session-info {
+      font-size: 14px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    .btn-outline:hover {
+      background: var(--bg-color);
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .theme-toggle:hover {
+      background: var(--bg-color);
+      color: var(--primary-color);
+    }
+
+    /* Chat Container */
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 0 20px;
+    }
+
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Message Styles - IMPROVED READABILITY */
+    .msg {
+      max-width: 85%;
+      padding: 18px 22px;
+      border-radius: var(--radius-lg);
+      position: relative;
+      animation: fadeIn 0.3s ease;
+      line-height: 1.7;
+      font-size: 15px;
+      box-shadow: var(--shadow);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .user {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: var(--radius-sm);
+    }
+
+    .bot {
+      background: var(--surface-color);
+      color: var(--text-primary);
+      align-self: flex-start;
+      border-bottom-left-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+    }
+
+    .msg-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+
+    .msg-content {
+      word-wrap: break-word;
+    }
+
+    /* Input Area */
+    #input-area {
+      background: var(--surface-color);
+      border-top: 1px solid var(--border-color);
+      padding: 20px;
+      position: sticky;
+      bottom: 0;
+      transition: all var(--transition);
+    }
+
+    .input-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    #input {
+      flex: 1;
+      padding: 14px 18px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      font-size: 16px;
+      resize: none;
+      max-height: 150px;
+      min-height: 52px;
+      outline: none;
+      transition: all var(--transition-fast);
+      font-family: inherit;
+      background: var(--surface-color);
+      color: var(--text-primary);
+    }
+
+    #input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    #send {
+      padding: 14px 24px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+      font-size: 15px;
+    }
+
+    #send:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    #send:disabled {
+      background: var(--border-color);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* SQL and Results Styling - IMPROVED */
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 18px;
+      border-radius: var(--radius);
+      overflow-x: auto;
+      font-size: 14px;
+      margin: 14px 0;
+      border: 1px solid #334155;
+      line-height: 1.5;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    }
+
+    [data-theme="dark"] pre {
+      background: #0f172a;
+      color: #cbd5e1;
+      border-color: #334155;
+    }
+
+    .sql-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 15px;
+    }
+
+    .copy-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .copy-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    /* SCROLLABLE TABLE CONTAINER - NEW */
+    .table-container {
+      max-height: 400px;
+      overflow-y: auto;
+      margin: 18px 0;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: var(--surface-color);
+    }
+
+    th, td {
+      border: 1px solid var(--border-color);
+      padding: 14px;
+      text-align: left;
+    }
+
+    th {
+      background: var(--primary-light);
+      font-weight: 600;
+      color: var(--text-primary);
+      position: sticky;
+      top: 0;
+    }
+
+    tr:nth-child(even) {
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    [data-theme="dark"] tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Status Messages */
+    .status-message {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      margin: 10px 0;
+      font-size: 15px;
+    }
+
+    .status-info {
+      background: #dbeafe;
+      color: #1e40af;
+      border-left: 4px solid #3b82f6;
+    }
+
+    .status-success {
+      background: #dcfce7;
+      color: #166534;
+      border-left: 4px solid var(--success-color);
+    }
+
+    .status-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border-left: 4px solid var(--error-color);
+    }
+
+    .status-warning {
+      background: #fef3c7;
+      color: #92400e;
+      border-left: 4px solid var(--warning-color);
+    }
+
+    [data-theme="dark"] .status-info {
+      background: rgba(59, 130, 246, 0.15);
+      color: #93c5fd;
+    }
+    
+    [data-theme="dark"] .status-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: #6ee7b7;
+    }
+    
+    [data-theme="dark"] .status-error {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+    }
+    
+    [data-theme="dark"] .status-warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fcd34d;
+    }
+
+    /* Clarification Styles - REMOVED CANCEL BUTTON */
+    .clarification {
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: var(--radius);
+      padding: 18px;
+      margin: 14px 0;
+    }
+
+    [data-theme="dark"] .clarification {
+      background: rgba(245, 158, 11, 0.1);
+      border-color: #d97706;
+      color: #fcd34d;
+    }
+
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .suggestion {
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 10px 18px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .suggestion:hover {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+      transform: translateY(-1px);
+    }
+
+    .suggestion-item {
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .suggestion-item:hover {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+      transform: translateY(-1px);
+    }
+
+    .suggestion-icon {
+      font-size: 14px;
+    }
+
+    .clarification-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    /* Loading Animation */
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 22px;
+      color: var(--text-secondary);
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 5px;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-secondary);
+      animation: typing 1.4s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes typing {
+      0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Welcome Screen */
+    .welcome-screen {
+      text-align: center;
+      padding: 40px 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .welcome-icon {
+      font-size: 48px;
+      color: var(--primary-color);
+      margin-bottom: 16px;
+    }
+
+    .welcome-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .welcome-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin: 32px 0;
+    }
+
+    .feature {
+      padding: 24px;
+      background: var(--surface-color);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      transition: transform var(--transition);
+    }
+
+    .feature:hover {
+      transform: translateY(-2px);
+    }
+
+    .feature-icon {
+      font-size: 24px;
+      color: var(--primary-color);
+      margin-bottom: 12px;
+    }
+
+    .feature h3 {
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .feature p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* Similarity warning */
+    .similarity-warning {
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      border-radius: var(--radius);
+      padding: 16px;
+      margin: 12px 0;
+    }
+
+    [data-theme="dark"] .similarity-warning {
+      background: rgba(245, 158, 11, 0.1);
+      border-color: #d97706;
+      color: #fcd34d;
+    }
+
+    /* Retry feedback message */
+    .retry-feedback {
+      background: var(--primary-light);
+      border: 1px solid var(--primary-color);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin: 12px 0;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .chat-container {
+        padding: 0 12px;
+      }
+      
+      .msg {
+        max-width: 92%;
+        padding: 16px 18px;
+      }
+      
+      header {
+        padding: 12px 16px;
+      }
+      
+      .logo span {
+        display: none;
+      }
+      
+      .features {
+        grid-template-columns: 1fr;
+      }
+      
+      .input-container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      #send {
+        align-self: flex-end;
+        width: auto;
+      }
+
+      .table-container {
+        max-height: 300px;
+      }
+    }
+
+    /* Scrollbar Styling */
+    #chat::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #chat::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #chat::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 3px;
+    }
+
+    #chat::-webkit-scrollbar-thumb:hover {
+      background: var(--text-secondary);
+    }
+
+    /* Table container scrollbar */
+    .table-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+      background: var(--bg-color);
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+
+    .table-container::-webkit-scrollbar-thumb:hover {
+      background: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="logo-icon">
+        <i class="fas fa-database"></i>
+      </div>
+      <span>Text2SQL Asistanı</span>
+    </div>
+    <div class="header-actions">
+      <div class="session-info">
+        <i class="fas fa-id-badge"></i>
+        <span>Oturum: <span id="session-id">varsayılan</span></span>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" title="Tema Değiştir">
+        <i class="fas fa-moon"></i>
+      </button>
+      <button class="btn btn-outline" id="clear-session">
+        <i class="fas fa-refresh"></i>
+        Yeni Oturum
+      </button>
+    </div>
+  </header>
+
+  <div class="chat-container">
+    <div id="chat">
+      <!-- Welcome message will be inserted here -->
+    </div>
+  </div>
+
+  <div id="input-area">
+    <div class="input-container">
+      <textarea id="input" type="text" placeholder="Veritabanınız hakkında bir soru sorun... (örn: En yüksek cirolu 5 müşteriyi göster)" rows="1"></textarea>
+      <button id="send">
+        <i class="fas fa-paper-plane"></i>
+        Gönder
+      </button>
+    </div>
+  </div>
+
+  <script>
+  const chat = document.getElementById("chat");
+  const input = document.getElementById("input");
+  const send = document.getElementById("send");
+  const sessionIdElement = document.getElementById("session-id");
+  const clearSessionBtn = document.getElementById("clear-session");
+  const themeToggle = document.getElementById("theme-toggle");
+
+  // Son kullanıcı sorgusunu saklamak için değişken
+  let lastUserQuery = '';
+  let lastClarificationData = null;
+
+  // Theme management
+  function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+  }
+
+  function toggleTheme() {
+    const currentTheme = document.body.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.body.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+  }
+
+  function updateThemeIcon(theme) {
+    const icon = themeToggle.querySelector('i');
+    icon.className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+  }
+
+  // Session ID management
+  let currentSessionId = generateSessionId();
+  sessionIdElement.textContent = currentSessionId;
+
+  function generateSessionId() {
+    return 'session_' + Math.random().toString(36).substr(2, 9);
+  }
+
+  function showWelcomeScreen() {
+    const welcomeHTML = `
+      <div class="welcome-screen">
+        <div class="welcome-icon">
+          <i class="fas fa-robot"></i>
+        </div>
+        <h1 class="welcome-title">Text2SQL Asistanı</h1>
+        <p class="welcome-subtitle">Türkçe sorular sorun, SQL sorguları ve sonuçları alın</p>
+        
+        <div class="features">
+          <div class="feature">
+            <div class="feature-icon">
+              <i class="fas fa-code"></i>
+            </div>
+            <h3>SQL Oluşturma</h3>
+            <p>Sorularınızı otomatik olarak SQL sorgularına dönüştürür</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">
+              <i class="fas fa-table"></i>
+            </div>
+            <h3>Veri Görselleştirme</h3>
+            <p>Sonuçları düzenli tablolarda görüntüleyin</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">
+              <i class="fas fa-comments"></i>
+            </div>
+            <h3>Etkileşimli</h3>
+            <p>Gerektiğinde sorularınızı netleştirir</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">
+              <i class="fas fa-history"></i>
+            </div>
+            <h3>Oturum Yönetimi</h3>
+            <p>Yeni oturum başlatarak hafızayı temizleyebilir, yeni bir konuşmaya başlayabilirsiniz</p>
+          </div>
+        </div>
+        
+        <div class="status-message status-info">
+          <i class="fas fa-lightbulb"></i>
+          <span>Örnek sorular: "En çok satan 5 ürünü göster" veya "İstanbul'daki tüm müşterileri listele"</span>
+        </div>
+      </div>
+    `;
+    
+    const div = document.createElement("div");
+    div.innerHTML = welcomeHTML;
+    chat.appendChild(div);
+  }
+
+  function addMessage(text, sender, isHTML = false) {
+    // Remove welcome screen if it exists
+    const welcomeScreen = chat.querySelector('.welcome-screen');
+    if (welcomeScreen) {
+      welcomeScreen.remove();
+    }
+
+    const div = document.createElement("div");
+    div.className = `msg ${sender}`;
+    
+    if (isHTML) {
+      div.innerHTML = text;
+    } else {
+      // Add timestamp
+      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const header = `<div class="msg-header">${sender === 'user' ? 'Siz' : 'Asistan'} • ${timestamp}</div>`;
+      const content = `<div class="msg-content">${escapeHtml(text)}</div>`;
+      div.innerHTML = header + content;
+    }
+    
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return div;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function showTypingIndicator() {
+    const indicator = document.createElement("div");
+    indicator.className = "msg bot typing-indicator";
+    indicator.innerHTML = `
+      <div class="msg-header">Asistan • yazıyor</div>
+      <div class="typing-dots">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+      <span>SQL sorgusu oluşturuluyor...</span>
+    `;
+    chat.appendChild(indicator);
+    chat.scrollTop = chat.scrollHeight;
+    return indicator;
+  }
+
+  function handleClarification(data, botDiv) {
+    // Clarification data'yı sakla
+    lastClarificationData = data;
+    
+    // FIXED: suggestions dizisini güvenli şekilde işleme
+    let suggestionsHTML = '';
+    if (data.suggestions && Array.isArray(data.suggestions)) {
+      suggestionsHTML = data.suggestions.map(suggestion => {
+        // Eğer suggestion bir string ise
+        if (typeof suggestion === 'string') {
+          return `<div class="suggestion" onclick="useSuggestion('${suggestion.replace(/'/g, "\\'")}')">${suggestion}</div>`;
+        } 
+        // Eğer suggestion bir object ise
+        else {
+          // Kullanıcıya gösterilecek metin: display veya description veya suggested
+          let displayText = suggestion.display || suggestion.description || suggestion.suggested || JSON.stringify(suggestion);
+          // Tıklanınca kullanılacak değer: suggested veya display veya description
+          let value = suggestion.suggested || suggestion.display || suggestion.description || displayText;
+          
+          // Özel ikonlar için
+          let icon = 'fas fa-lightbulb';
+          if (suggestion.type === 'semantic') icon = 'fas fa-brain';
+          if (suggestion.type === 'lexical') icon = 'fas fa-font';
+          if (suggestion.type === 'hybrid') icon = 'fas fa-bolt';
+          if (suggestion.type === 'timestamp_format') icon = 'fas fa-calendar-alt';
+          if (suggestion.type === 'remove_condition') icon = 'fas fa-trash';
+          
+          return `
+            <div class="suggestion-item" onclick="useSuggestion('${String(value).replace(/'/g, "\\'")}')">
+              <i class="${icon} suggestion-icon"></i>
+              ${displayText}
+              ${suggestion.score_percent ? `<small>(${suggestion.score_percent}%)</small>` : ''}
+            </div>
+          `;
+        }
+      }).join('');
+    }
+
+    // Özel benzerlik uyarısı için
+    let similarityWarning = '';
+    if (data.error_type === 'low_similarity' || data.is_similarity_check) {
+      similarityWarning = `
+        <div class="similarity-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <strong>Düşük Benzerlik Uyarısı</strong>
+          <p>${data.error || 'Sorgunuz veritabanındaki tablolarla tam eşleşmiyor.'}</p>
+        </div>
+      `;
+    }
+
+    // IPTAL BUTONU KALDIRILDI - sadece "Aynı sorgu ile tekrar dene" butonu kaldı
+    const clarificationHTML = `
+      <div class="msg-header">Asistan • netleştirme gerekiyor</div>
+      <div class="clarification">
+        ${similarityWarning}
+        <strong><i class="fas fa-question-circle"></i> ${data.clarification_question}</strong>
+        ${data.suggestions && data.suggestions.length > 0 ? `
+          <div style="margin-top: 12px;">
+            <strong>Öneriler:</strong>
+            <div class="suggestions">
+              ${suggestionsHTML}
+            </div>
+          </div>
+        ` : ''}
+        <div class="clarification-actions">
+          <button class="btn btn-primary" onclick="retryWithSameQuery()">
+            <i class="fas fa-redo"></i> Aynı sorgu ile tekrar dene
+          </button>
+        </div>
+      </div>
+    `;
+    botDiv.innerHTML = clarificationHTML;
+  }
+
+  // DÜZELTİLMİŞ: Aynı sorgu ile tekrar deneme fonksiyonu
+  async function retryWithSameQuery() {
+    if (!lastUserQuery || !lastClarificationData) return;
+    
+    // Sadece clarification mesajını içeren bot mesajını kaldır
+    const clarificationMessages = document.querySelectorAll('.msg.bot');
+    for (const msg of clarificationMessages) {
+      if (msg.querySelector('.clarification')) {
+        msg.remove();
+        break; // Sadece ilk clarification mesajını kaldır
+      }
+    }
+    
+    // Görünür feedback mesajı ekle
+    const feedbackHTML = `
+      <div class="retry-feedback">
+        <i class="fas fa-sync-alt"></i>
+        <strong>Aynı sorgu ile tekrar deneniyor (benzerlik kontrolü olmadan):</strong> "${lastUserQuery}"
+      </div>
+    `;
+    
+    const feedbackDiv = document.createElement("div");
+    feedbackDiv.innerHTML = feedbackHTML;
+    chat.appendChild(feedbackDiv);
+    chat.scrollTop = chat.scrollHeight;
+    
+    const typingIndicator = showTypingIndicator();
+    send.disabled = true;
+
+    try {
+      // Backend'e özel bir flag göndererek benzerlik kontrolünü atlatıyoruz
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          question: lastUserQuery,
+          session_id: currentSessionId,
+          user_feedback: {
+            skip_similarity_check: true,
+            original_sql: lastClarificationData.sql || '',
+            clarification_data: lastClarificationData
+          }
+        })
+      });
+
+      const data = await res.json();
+      
+      // Feedback mesajını ve typing indicator'ü kaldır
+      feedbackDiv.remove();
+      typingIndicator.remove();
+
+      if (data.success) {
+        const htmlContent = formatSQLResponse(data);
+        addMessage(htmlContent, "bot", true);
+      } else {
+        // Eğer hala hata varsa, normal hata mesajı göster
+        if (data.needs_clarification) {
+          const botDiv = addMessage("", "bot", true);
+          handleClarification(data, botDiv);
+        } else {
+          const htmlContent = formatErrorResponse(data);
+          addMessage(htmlContent, "bot", true);
+        }
+      }
+    } catch (err) {
+      // Hata durumunda feedback mesajını ve typing indicator'ü kaldır
+      feedbackDiv.remove();
+      typingIndicator.remove();
+      
+      const errorHTML = `<div class="status-message status-error">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>İstek başarısız: ${err.message}</span>
+      </div>`;
+      addMessage(errorHTML, "bot", true);
+    } finally {
+      send.disabled = false;
+      input.focus();
+      // Bir sonraki sorgu için clarification data'yı temizle
+      lastClarificationData = null;
+    }
+  }
+
+  function useSuggestion(suggestion) {
+    // Eğer suggestion bir object ise, string'e çevir
+    if (typeof suggestion === 'object') {
+      suggestion = suggestion.suggested || suggestion.display || suggestion.description || JSON.stringify(suggestion);
+    }
+    input.value = suggestion;
+    input.focus();
+    // Auto-adjust textarea height
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 150) + 'px';
+  }
+
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      // Show temporary feedback
+      const originalText = event.target.textContent;
+      event.target.textContent = 'Kopyalandı!';
+      event.target.style.background = 'var(--success-color)';
+      setTimeout(() => {
+        event.target.textContent = originalText;
+        event.target.style.background = '';
+      }, 2000);
+    });
+  }
+
+  function formatSQLResponse(data) {
+    let htmlContent = `<div class="status-message status-success">
+      <i class="fas fa-check-circle"></i>
+      <span>SQL sorgusu başarıyla oluşturuldu${data.attempts > 1 ? ` (${data.attempts} deneme)` : ''}</span>
+      ${data.similarity_score ? `<br><small>Benzerlik skoru: %${(data.similarity_score * 100).toFixed(1)}</small>` : ''}
+    </div>`;
+    
+    htmlContent += `<div class="sql-header">
+      <strong><i class="fas fa-code"></i> Oluşturulan SQL:</strong>
+      <button class="copy-btn" onclick="copyToClipboard(\`${data.sql.replace(/`/g, '\\`')}\`)">
+        <i class="fas fa-copy"></i> Kopyala
+      </button>
+    </div>`;
+    htmlContent += `<pre>${data.sql}</pre>`;
+    
+    // TABLOYU SCROLLABLE CONTAINER İÇİNE AL
+    htmlContent += `<div class="table-container">${data.html}</div>`;
+    
+    return htmlContent;
+  }
+
+  function formatErrorResponse(data) {
+    let htmlContent = `<div class="status-message status-error">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>${data.error || "Bilinmeyen bir hata oluştu"}${data.attempts > 1 ? ` (${data.attempts} denemeden sonra başarısız)` : ''}</span>
+    </div>`;
+    
+    if (data.sql) {
+      htmlContent += `<div class="sql-header">
+        <strong><i class="fas fa-code"></i> Oluşturulan SQL (hatalı):</strong>
+        <button class="copy-btn" onclick="copyToClipboard(\`${data.sql.replace(/`/g, '\\`')}\`)">
+          <i class="fas fa-copy"></i> Kopyala
+        </button>
+      </div>`;
+      htmlContent += `<pre>${data.sql}</pre>`;
+    }
+    
+    return htmlContent;
+  }
+
+  async function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+    
+    // Son kullanıcı sorgusunu sakla
+    lastUserQuery = text;
+    
+    addMessage(text, "user");
+    input.value = "";
+    send.disabled = true;
+    
+    // Reset textarea height
+    input.style.height = 'auto';
+
+    const typingIndicator = showTypingIndicator();
+
+    try {
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          question: text,
+          session_id: currentSessionId
+        })
+      });
+
+      const data = await res.json();
+      typingIndicator.remove();
+
+      if (data.success) {
+        const htmlContent = formatSQLResponse(data);
+        addMessage(htmlContent, "bot", true);
+      } else {
+        if (data.needs_clarification) {
+          const botDiv = addMessage("", "bot", true);
+          handleClarification(data, botDiv);
+        } else {
+          const htmlContent = formatErrorResponse(data);
+          addMessage(htmlContent, "bot", true);
+        }
+      }
+    } catch (err) {
+      typingIndicator.remove();
+      const errorHTML = `<div class="status-message status-error">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>İstek başarısız: ${err.message}</span>
+      </div>`;
+      addMessage(errorHTML, "bot", true);
+    } finally {
+      send.disabled = false;
+      input.focus();
+    }
+  }
+
+  async function clearSession() {
+    try {
+      await fetch(`/session/${currentSessionId}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.error('Oturum temizleme hatası:', err);
+    }
+    
+    currentSessionId = generateSessionId();
+    sessionIdElement.textContent = currentSessionId;
+    chat.innerHTML = '';
+    showWelcomeScreen();
+    lastUserQuery = ''; // Son sorguyu da temizle
+    lastClarificationData = null; // Clarification data'yı da temizle
+  }
+
+  // Auto-resize textarea
+  input.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+  });
+
+  // Event listeners
+  themeToggle.addEventListener("click", toggleTheme);
+  clearSessionBtn.addEventListener("click", clearSession);
+  send.addEventListener("click", sendMessage);
+  input.addEventListener("keypress", (e) => { 
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // Initialize
+  window.addEventListener('load', () => {
+    initTheme();
+    input.focus();
+    showWelcomeScreen();
+  });
+
+  // Make functions available globally for onclick handlers
+  window.useSuggestion = useSuggestion;
+  window.retryWithSameQuery = retryWithSameQuery;
+  window.copyToClipboard = copyToClipboard;
+  </script>
+</body>
+</html>

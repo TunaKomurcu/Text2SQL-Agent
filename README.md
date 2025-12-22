@@ -378,18 +378,6 @@ Sistemde deneyebileceğiniz örnek sorgular:
   
 ---
 
-## 🤝 Katkıda Bulunma
-
-Projeye katkıda bulunmak isterseniz:
-
-1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Değişikliklerinizi commit edin (`git commit -m 'Add amazing feature'`)
-4. Branch'inizi push edin (`git push origin feature/amazing-feature`)
-5. Pull Request açın
-
----
-
 ## 📄 Lisans
 
 Bu proje MIT lisansı altında lisanslanmıştır.

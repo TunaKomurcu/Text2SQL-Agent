@@ -14,10 +14,8 @@
 
 Projeyi detaylı şekilde anlamak için:
 
-- 📖 **[SUNUM.md](SUNUM.md)** - Sunum için hazır içerik, demo senaryoları
 - 🏗️ **[MIMARI.md](MIMARI.md)** - Teknik mimari ve algoritma detayları
 - 🚀 **[KURULUM_KILAVUZU.md](KURULUM_KILAVUZU.md)** - Detaylı kurulum adımları
-- 🎬 **[DEMO_SENARYOLARI.md](DEMO_SENARYOLARI.md)** - Canlı demo örnekleri
 - 📁 **[DOSYA_YAPISI.md](DOSYA_YAPISI.md)** - Proje klasör yapısı
 
 ---
@@ -135,10 +133,8 @@ test/
 ├── fk_graph.json            # FK ilişkileri (200+ edge)
 ├── .env                     # Ortam değişkenleri
 │
-├── 📖 SUNUM.md              # Sunum dokümanı
 ├── 🏗️ MIMARI.md             # Teknik mimari
 ├── 🚀 KURULUM_KILAVUZU.md   # Detaylı kurulum
-├── 🎬 DEMO_SENARYOLARI.md   # Demo örnekleri
 └── 📁 DOSYA_YAPISI.md       # Klasör yapısı
 ```
 
@@ -204,21 +200,6 @@ SQL PostgreSQL'de çalıştırılır ve sonuçlar kullanıcıya döner.
 | Doğruluk oranı (basit) | ~95%+ |
 | Doğruluk oranı (orta) | ~80-85% |
 | Desteklenen tablo sayısı | Sınırsız (teorik) |
-
----
-
-## 🎬 Demo & Sunum
-
-Projeyi sunum yapacaksanız:
-
-1. **[SUNUM.md](SUNUM.md)** - Sunum için hazır içerik
-2. **[DEMO_SENARYOLARI.md](DEMO_SENARYOLARI.md)** - Canlı demo örnekleri
-3. **[MIMARI.md](MIMARI.md)** - Teknik sorular için
-
-**Demo Örnekleri**:
-- "Ankara'daki sayaçları listele" → Basit JOIN
-- "Her ildeki sayaç sayısını hesapla" → Aggregation
-- "Son 2 saatlik yük profil verilerini getir" → Zaman serisi + kompleks JOIN
 
 ---
 
@@ -292,7 +273,6 @@ LLM_MODEL_PATH=./models/[model-adı].gguf
 
 - **Mimari Dokümantasyon**: [MIMARI.md](MIMARI.md)
 - **Kurulum Kılavuzu**: [KURULUM_KILAVUZU.md](KURULUM_KILAVUZU.md)
-- **Demo Senaryoları**: [DEMO_SENARYOLARI.md](DEMO_SENARYOLARI.md)
 - **Dosya Yapısı**: [DOSYA_YAPISI.md](DOSYA_YAPISI.md)
 - **Sorgu Analizi**: [SORGU_ANALIZI.md](SORGU_ANALIZI.md)bash
 DB_HOST=localhost
@@ -395,9 +375,7 @@ Sistemde deneyebileceğiniz örnek sorgular:
 - "Her ildeki sayaç sayısını hesapla"
 - "Son 2 saatlik yük profil verilerini getir"
 - "En çok elektrik tüketen 10 sayacı bul"
-
-Daha fazlası için: [DEMO_SENARYOLARI.md](DEMO_SENARYOLARI.md)
-
+  
 ---
 
 ## 🤝 Katkıda Bulunma
@@ -427,12 +405,6 @@ Bu projeyi mümkün kılan açık kaynak projelere teşekkürler:
 - **Qdrant** - Vector database
 - **FastAPI** - Web framework
 - **emrecan/bert-base-turkish-cased-mean-nli-stsb-tr** - Türkçe BERT modeli
-
----
-
-<div align="center">
-
-**⭐ Projeyi beğendiyseniz yıldız vermeyi unutmayın! ⭐**
 
 ---
 

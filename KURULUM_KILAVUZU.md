@@ -563,10 +563,7 @@ Kurulum tamamlandıysa:
 
 Sorun yaşıyorsanız:
 
-1. **Logları kontrol edin**: Terminal'de hata mesajlarını okuyun
-2. **GitHub Issues**: (eğer repo varsa) Issue açın
-3. **Dokümantasyon**: README.md ve diğer MD dosyalarını okuyun
+**Logları kontrol edin**: Terminal'de hata mesajlarını okuyun
+**Dokümantasyon**: README.md ve diğer MD dosyalarını okuyun
 
 ---
-
-**Kolay gelsin! 🚀**

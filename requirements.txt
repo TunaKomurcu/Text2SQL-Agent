@@ -56,8 +56,10 @@ sympy==1.14.0
 threadpoolctl==3.6.0
 tokenizers==0.22.1
 # PyTorch with CUDA 11.8 support (GPU acceleration)
-# For CPU-only: use torch==2.8.0+cpu with --index-url https://download.pytorch.org/whl/cpu
-torch==2.8.0+cu118 --index-url https://download.pytorch.org/whl/cu118
+# NOT: PyTorch'u requirements.txt'den ÖNCE ayrı kurmalısınız:
+#   pip install torch==2.8.0+cu118 --index-url https://download.pytorch.org/whl/cu118
+# Eğer zaten kurduysanız, aşağıdaki satır yorum satırı olarak kalsın:
+# torch==2.8.0+cu118
 tqdm==4.67.1
 transformers==4.56.2
 typing-inspection==0.4.1

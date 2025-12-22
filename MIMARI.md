@@ -15,7 +15,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         CLIENT LAYER                             │
+│                         CLIENT LAYER                            │
 │  ┌──────────────┐         ┌──────────────┐                      │
 │  │  Web Browser │◄────────│  WebSocket   │                      │
 │  │  (chat.html) │         │  Connection  │                      │
@@ -23,35 +23,35 @@
 └────────────────────────────────┬────────────────────────────────┘
                                  │ HTTP/WS
 ┌────────────────────────────────▼────────────────────────────────┐
-│                      APPLICATION LAYER                           │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │              FastAPI Server (Text2SQL_Agent.py)          │  │
-│  │  ┌────────────┐  ┌────────────┐  ┌──────────────────┐  │  │
-│  │  │  Routing   │  │   Chat     │  │   Session Mgmt   │  │  │
-│  │  │  Layer     │  │  Endpoint  │  │   (WebSocket)    │  │  │
-│  │  └────────────┘  └────────────┘  └──────────────────┘  │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │           INTERACTIVE SQL GENERATOR                       │  │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────┐ │  │
-│  │  │ Semantic │  │  Schema  │  │   SQL    │  │  Auto   │ │  │
-│  │  │  Search  │→ │  Builder │→ │Generator │→ │  Fix    │ │  │
-│  │  └──────────┘  └──────────┘  └──────────┘  └─────────┘ │  │
-│  └──────────────────────────────────────────────────────────┘  │
+│                      APPLICATION LAYER                          │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │              FastAPI Server (Text2SQL_Agent.py)          │   │
+│  │  ┌────────────┐  ┌────────────┐  ┌──────────────────┐  │ │   │
+│  │  │  Routing   │  │   Chat     │  │   Session Mgmt   │  │ │   │
+│  │  │  Layer     │  │  Endpoint  │  │   (WebSocket)    │  │ │   │
+│  │  └────────────┘  └────────────┘  └──────────────────┘  │ │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │           INTERACTIVE SQL GENERATOR                      │   │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────┐   │   │
+│  │  │ Semantic │  │  Schema  │  │   SQL    │  │  Auto   │   │   │
+│  │  │  Search  │→ │  Builder │→ │Generator │→ │  Fix    │   │   │
+│  │  └──────────┘  └──────────┘  └──────────┘  └─────────┘   │   │
+│  └──────────────────────────────────────────────────────────┘   │
 └────────┬───────────────────────────┬────────────────────┬───────┘
          │                           │                    │
 ┌────────▼────────┐      ┌───────────▼────────┐  ┌───────▼──────┐
 │  VECTOR STORE   │      │     AI MODELS      │  │   DATABASE   │
 │                 │      │                    │  │              │
-│  ┌───────────┐  │      │  ┌──────────────┐ │  │ ┌──────────┐ │
-│  │  Qdrant   │  │      │  │ Embedding    │ │  │ │PostgreSQL│ │
-│  │           │  │      │  │ Model (GPU)  │ │  │ │          │ │
-│  │ - Schema  │  │      │  └──────────────┘ │  │ │ - Tables │ │
-│  │ - Keywords│  │      │  ┌──────────────┐ │  │ │ - FK     │ │
-│  │ - Lexical │  │      │  │ LLM Model    │ │  │ │ - Data   │ │
-│  │ - Data    │  │      │  │ (Qwen-7B)    │ │  │ └──────────┘ │
-│  └───────────┘  │      │  └──────────────┘ │  │              │
+│  ┌───────────┐  │      │  ┌──────────────┐  │  │ ┌──────────┐ │
+│  │  Qdrant   │  │      │  │ Embedding    │  │  │ │PostgreSQL│ │
+│  │           │  │      │  │ Model (GPU)  │  │  │ │          │ │
+│  │ - Schema  │  │      │  └──────────────┘  │  │ │ - Tables │ │
+│  │ - Keywords│  │      │  ┌──────────────┐  │  │ │ - FK     │ │
+│  │ - Lexical │  │      │  │ LLM Model    │  │  │ │ - Data   │ │
+│  │ - Data    │  │      │  │ (Qwen-7B)    │  │  │ └──────────┘ │
+│  └───────────┘  │      │  └──────────────┘  │  │              │
 └─────────────────┘      └────────────────────┘  └──────────────┘
 ```
 
@@ -243,8 +243,7 @@ def find_minimal_connecting_paths(fk_graph, selected_tables, max_hops=2):
 │      DYNAMIC PROMPT (değişken)         │
 │  - İzin verilen tablolar               │
 │  - Sütunlar + Türkçe açıklamalar       │
-│  - FK ilişkileri (JOIN yolları)        │
-│  - Örnek değerler                      │
+│  - FK ilişkileri (JOIN yolları)        │                    
 │  - Kullanıcı sorusu                    │
 └────────────────────────────────────────┘
             │
@@ -252,7 +251,7 @@ def find_minimal_connecting_paths(fk_graph, selected_tables, max_hops=2):
           [LLM]
             │
             ▼
-         [SQL]
+          [SQL]
 ```
 
 **Örnek Dynamic Prompt**:
@@ -663,5 +662,3 @@ print(f"Auto-fix applied: {fixes}")
 - RapidFuzz: Fuzzy string matching
 
 ---
-
-Bu dokümantasyon, sistem mimarisinin tüm teknik detaylarını içerir. Daha fazla bilgi için kaynak kodları inceleyin.

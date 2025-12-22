@@ -64,7 +64,7 @@ Projeyi detaylı şekilde anlamak için:
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 
-# PyTorch CUDA ile yükle
+# PyTorch CUDA ile yükle (önce bu)
 pip install torch==2.8.0+cu118 --index-url https://download.pytorch.org/whl/cu118
 
 # Diğer paketleri yükle

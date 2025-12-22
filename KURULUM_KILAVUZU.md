@@ -151,7 +151,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 #### 3️⃣ PyTorch GPU Kurulumu
 
 ```powershell
-# PyTorch CUDA 11.8 versiyonu
+# PyTorch CUDA 11.8 versiyonu (önce bu kurulmalı)
 pip install torch==2.8.0+cu118 --index-url https://download.pytorch.org/whl/cu118
 
 # GPU'nun algılandığını test et

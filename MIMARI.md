@@ -63,35 +63,35 @@
 
 ```
 1. USER INPUT
-   └─► "Ankara'daki aktif sayaçları listele"
+   └─► "New York'taki aktif cihazları listele"
 
 2. HYBRID SEARCH (3 parallel streams)
    ├─► Semantic Search (Qdrant)
    │   ├─ Query → Embedding Model → Vector
    │   ├─ Search: schema_embeddings collection
    │   ├─ Search: schema_keywords collection
-   │   └─ Results: {e_sayac: 0.89, il: 0.82, m_meter_status: 0.76}
+   │   └─ Results: {devices: 0.89, regions: 0.82, device_status: 0.76}
    │
    ├─► Lexical Search (FastText/TF-IDF)
    │   ├─ Query → Character n-grams
    │   ├─ Search: lexical_embeddings collection
-   │   └─ Results: {e_sayac: 0.71, sayac_durumu: 0.65}
+   │   └─ Results: {devices: 0.71, device_status: 0.65}
    │
    └─► Data Values Search (Qdrant)
        ├─ Query → Embedding Model → Vector
        ├─ Search: data_samples collection
-       └─ Results: {il.adi='Ankara': 0.93}
+       └─ Results: {regions.name='New York': 0.93}
 
 3. RESULT FUSION & SCORING
    ├─ Normalize scores (min-max scaling)
    ├─ Apply weights: semantic(0.5) + lexical(0.3) + keyword(0.2)
-   └─ Top tables: [e_sayac, il, m_meter_status]
+   └─ Top tables: [devices, regions, device_status]
 
 4. SCHEMA INTELLIGENCE
    ├─ Load FK Graph (fk_graph.json)
    ├─ BFS Algorithm: Find connecting paths
-   │   e_sayac.il_id → il.id
-   │   e_sayac.meter_status_id → m_meter_status.id
+   │   devices.region_id → regions.id
+   │   devices.status_id → device_status.id
    └─ Build schema_pool (metadata for LLM)
 
 5. PROMPT CONSTRUCTION
@@ -179,15 +179,15 @@ def semantic_search(query: str, top_k: int = 10):
 {
   "edges": [
     {
-      "table": "m_load_profile",
-      "column": "meter_id",
-      "ref_table": "e_sayac",
+      "table": "measurements",
+      "column": "device_id",
+      "ref_table": "devices",
       "ref_column": "id"
     }
   ],
   "adjacency": {
-    "m_load_profile": ["e_sayac"],
-    "e_sayac": ["il", "m_meter_status", "..."]
+    "measurements": ["devices"],
+    "devices": ["regions", "device_status", "..."]
   }
 }
 ```
@@ -211,11 +211,11 @@ def find_minimal_connecting_paths(fk_graph, selected_tables, max_hops=2):
 **Örnek Çıktı**:
 ```python
 {
-  "m_load_profile->e_sayac": [
-    {"from": "m_load_profile.meter_id", "to": "e_sayac.id"}
+  "measurements->devices": [
+    {"from": "measurements.device_id", "to": "devices.id"}
   ],
-  "e_sayac->il": [
-    {"from": "e_sayac.il_id", "to": "il.id"}
+  "devices->regions": [
+    {"from": "devices.region_id", "to": "regions.id"}
   ]
 }
 ```
@@ -259,21 +259,21 @@ def find_minimal_connecting_paths(fk_graph, selected_tables, max_hops=2):
 ```
 === İZİN VERİLEN TABLO VE SÜTUNLAR ===
 
-helios.e_sayac (  -- sayaç, elektrik sayacı
+mycompany.devices (  -- device, equipment
     id bigint -- PK
-    seri_no bigint (seri numarası, serial number)
-    il_id bigint -- FK -> helios.il.id
+    serial_number varchar (serial number)
+    region_id bigint -- FK -> mycompany.regions.id
 )
 
-helios.il (  -- şehir, il
+mycompany.regions (  -- region, location
     id bigint -- PK
-    adi varchar (il adı, şehir adı)
+    name varchar (region name, location name)
 )
 
 === ZİNCİRLEME JOIN YOLLARI ===
-  helios.e_sayac.il_id → helios.il.id
+  mycompany.devices.region_id → mycompany.regions.id
 
-Kullanıcı Sorusu: "Ankara'daki sayaçları listele"
+Kullanıcı Sorusu: "New York'taki cihazları listele"
 SQL:
 ```
 
@@ -288,8 +288,8 @@ SQL:
 **Kontroller**:
 1. **Tablo ismi kontrolü**:
    ```python
-   # LLM yazdı: "e_sayaclar"
-   # Gerçek: "e_sayac"
+   # LLM yazdı: "device_list"
+   # Gerçek: "devices"
    # Auto-fix: Fuzzy matching (RapidFuzz)
    if table_name not in schema_pool:
        best_match = max(schema_pool.keys(), 
@@ -300,8 +300,8 @@ SQL:
 
 2. **Kolon ismi kontrolü**:
    ```python
-   # LLM yazdı: "seri_numarasi"
-   # Gerçek: "seri_no"
+   # LLM yazdı: "serial_num"
+   # Gerçek: "serial_number"
    # Auto-fix: Kolon listesinde ara
    if column not in table_columns:
        best_match = find_closest_column(column, table_columns)
@@ -377,36 +377,36 @@ llm = Llama(
 
 **Ana Tablolar**:
 ```sql
--- Sayaç bilgileri
-helios.e_sayac (
+-- Device information
+mycompany.devices (
     id BIGINT PRIMARY KEY,
-    seri_no BIGINT,
-    meter_id BIGINT,
-    il_id BIGINT REFERENCES helios.il(id),
-    meter_status_id BIGINT REFERENCES helios.m_meter_status(id),
+    serial_number VARCHAR,
+    device_id BIGINT,
+    region_id BIGINT REFERENCES mycompany.regions(id),
+    status_id BIGINT REFERENCES mycompany.device_status(id),
     ...
 )
 
--- Şehir bilgileri
-helios.il (
+-- Region information
+mycompany.regions (
     id BIGINT PRIMARY KEY,
-    adi VARCHAR,
+    name VARCHAR,
     ...
 )
 
--- Yük profil verileri
-helios.m_load_profile (
+-- Measurement data
+mycompany.measurements (
     id BIGINT PRIMARY KEY,
-    meter_id BIGINT REFERENCES helios.e_sayac(id),
+    device_id BIGINT REFERENCES mycompany.devices(id),
     datetime TIMESTAMP,
     value DOUBLE PRECISION,
     ...
 )
 
--- Sayaç durumu
-helios.m_meter_status (
+-- Device status
+mycompany.device_status (
     id BIGINT PRIMARY KEY,
-    adi VARCHAR,
+    name VARCHAR,
     ...
 )
 ```
@@ -424,10 +424,10 @@ helios.m_meter_status (
     "id": 1,
     "vector": [0.123, -0.456, ...],  # 768 dim
     "payload": {
-        "table_name": "e_sayac",
-        "column_name": "seri_no",
-        "data_type": "bigint",
-        "full_text": "e_sayac.seri_no bigint"
+        "table_name": "devices",
+        "column_name": "serial_number",
+        "data_type": "varchar",
+        "full_text": "devices.serial_number varchar"
     }
 }
 ```
@@ -438,10 +438,10 @@ helios.m_meter_status (
     "id": 1,
     "vector": [0.234, -0.567, ...],  # 768 dim
     "payload": {
-        "table_name": "e_sayac",
-        "column_name": "seri_no",
-        "keyword": "seri numarası",
-        "language": "tr"
+        "table_name": "devices",
+        "column_name": "serial_number",
+        "keyword": "serial number",
+        "language": "en"
     }
 }
 ```
@@ -477,22 +477,25 @@ helios.m_meter_status (
 
 ## 🔬 Algoritmalar
 
-### 1. Hybrid Search Fusion
+### 1. Hybrid Search Strategy
 
-**Formül**:
-```
-final_score = α * semantic_score + β * lexical_score + γ * keyword_score
+**Gerçek İmplementasyon** (Formül-based scoring YOK):
 
-Varsayılan: α=0.5, β=0.3, γ=0.2
-```
-
-**Normalizasyon**:
 ```python
-def normalize_score(score, min_score, max_score):
-    if max_score == min_score:
-        return 0.5
-    return (score - min_score) / (max_score - min_score)
+# Her aramadan ayrı ayrı top-3 tablo seç
+top_semantic_tables = get_top_tables(semantic_results, top_k=3)
+top_lexical_tables = get_top_tables(lexical_results, top_k=3)
+top_keyword_tables = get_top_tables(keyword_results, top_k=3)
+top_data_values_tables = get_top_tables(data_values_results, top_k=3)
+
+# Tüm tabloları birleştir (unique set)
+selected_tables = set(top_semantic + top_lexical + top_keyword + top_data)
 ```
+
+**Tablo Seçim Mantığı**:
+- Her kaynak (semantic/lexical/keyword/data) için **ayrı ayrı** en iyi 3 tablo seçilir
+- Tablolar **birleştirilir** (unique set) → Maksimum 12 tablo (genellikle 5-8)
+- **Ağırlıklı toplam YOK** → Her kaynak eşit önemde
 
 **Threshold Filtering**:
 ```python
@@ -538,27 +541,48 @@ def bfs_shortest_path(graph, start, end, max_depth=2):
 
 ### 3. Column Relevance Scoring
 
-**Formül**:
+**Gerçek İmplementasyon** (Priority-Based System):
+
 ```python
-relevance_score = (
-    0.4 * semantic_similarity +
-    0.3 * keyword_match_bonus +
-    0.2 * data_value_match_bonus +
-    0.1 * column_usage_frequency
-)
+# Her kolon için source_priority ve similarity score
+all_columns = [
+    {"table": "regions", "column": "name", 
+     "similarity": 0.92, "source_priority": 5, "type": "data_values"},
+    {"table": "devices", "column": "serial_number", 
+     "similarity": 0.88, "source_priority": 4, "type": "keyword"},
+    {"table": "regions", "column": "id", 
+     "similarity": 0.75, "source_priority": 3, "type": "semantic"},
+    # ...
+]
+
+# Sıralama: source_priority > similarity
+final_columns = sorted(
+    unique_columns.values(), 
+    key=lambda x: (x["source_priority"], x["similarity"]), 
+    reverse=True
+)[:top_n]
 ```
+
+**Source Priority Değerleri**:
+- **5**: Data Values (gerçek veri eşleşmesi) → En yüksek
+- **4**: Keyword (Türkçe anahtar kelime eşleşmesi)
+- **3**: Semantic (embedding benzerliği)
+- **2**: Lexical (TF-IDF/FastText)
 
 **Örnek**:
 ```python
-# Soru: "Ankara'daki sayaçlar"
-# Kolon: il.adi
+# Soru: "New York'taki cihazlar"
 
-semantic_similarity = 0.82  # "şehir adı" embedding'i sorguya yakın
-keyword_match_bonus = 1.0   # "Ankara" değeri bulundu
-data_value_match_bonus = 1.0  # "Ankara" bu kolonda var
-usage_frequency = 0.9       # Bu kolon sık kullanılıyor
+# regions.name → priority=5 (data_values), similarity=0.92
+# → "New York" değeri bu kolonda bulundu!
 
-final_score = 0.4*0.82 + 0.3*1.0 + 0.2*1.0 + 0.1*0.9 = 0.918
+# devices.serial_number → priority=4 (keyword), similarity=0.88  
+# → "cihaz" keyword'ü eşleşti
+
+# devices.region_id → priority=3 (semantic), similarity=0.75
+# → Semantic olarak alakalı
+
+# Sonuç: regions.name önce seçilir (priority 5 > 4 > 3)
 ```
 
 ---

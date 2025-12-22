@@ -35,15 +35,15 @@ Projeyi detaylı şekilde anlamak için:
 ## 🎯 Kullanım Örneği
 
 ```
-👤 Kullanıcı: "Ankara'daki aktif sayaçların son 2 saatlik yük profil verilerini getir"
+👤 Kullanıcı: "New York'taki aktif cihazların son 2 saatlik ölçüm verilerini getir"
 
-🤖 Sistem:    SELECT es.seri_no, lp.datetime, lp.value 
-             FROM m_load_profile lp 
-             JOIN e_sayac es ON lp.meter_id = es.id
-             JOIN il ON es.il_id = il.id
-             WHERE il.adi = 'Ankara' 
-             AND lp.datetime >= NOW() - INTERVAL '2 hours'
-             ORDER BY lp.datetime DESC;
+🤖 Sistem:    SELECT d.serial_number, m.datetime, m.value 
+             FROM measurements m 
+             JOIN devices d ON m.device_id = d.id
+             JOIN regions r ON d.region_id = r.id
+             WHERE r.name = 'New York' 
+             AND m.datetime >= NOW() - INTERVAL '2 hours'
+             ORDER BY m.datetime DESC;
 
 📊 Sonuç:     [Tablo formatında veriler]
 ```

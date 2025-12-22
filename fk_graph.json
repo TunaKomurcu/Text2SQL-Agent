@@ -1,5 +1,5 @@
-  #  Bu kısım Veri tabanına özel olarak build_vectorDB.py doyası içinde otomatik olarak oluşturulacaktır. 
-  #  Aşağıdaki verileri formata örnek göstermek için verilmiştir...
+#  Bu kısım Veri tabanına özel olarak build_vectorDB.py doyası içinde otomatik olarak oluşturulacaktır. 
+#  Aşağıdaki verileri formata örnek göstermek için verilmiştir...
 
 {
   "edges": [

@@ -355,8 +355,6 @@ LLM_N_CTX=8192     # Daha uzun sorgular için
 |-------|--------|
 | Kurulum sorunları | [KURULUM_KILAVUZU.md](KURULUM_KILAVUZU.md) |
 | Mimari soruları | [MIMARI.md](MIMARI.md) |
-| Demo hazırlığı | [DEMO_SENARYOLARI.md](DEMO_SENARYOLARI.md) |
-| Sunum | [SUNUM.md](SUNUM.md) |
 | Genel bakış | [README.md](README.md) |
 
 ---

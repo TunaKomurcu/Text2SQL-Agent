@@ -549,16 +549,6 @@ Aşağıdakilerin hepsi çalışmalı:
 
 ---
 
-## 🎓 Sonraki Adımlar
-
-Kurulum tamamlandıysa:
-
-1. **Demo Deneyin**: [SUNUM.md](SUNUM.md) - Demo Senaryosu
-2. **Mimariye Bakın**: [MIMARI.md](MIMARI.md) - Sistem nasıl çalışıyor
-3. **Test Edin**: Kendi sorularınızı sorun
-
----
-
 ## 📞 Yardım ve Destek
 
 Sorun yaşıyorsanız:

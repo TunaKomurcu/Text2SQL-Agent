@@ -11,6 +11,12 @@ from functools import lru_cache
 
 from config import settings, create_qdrant_client, get_db_conn_kwargs
 
+# 🔍 DEBUG: Print threshold values on startup
+print(f"🔍 [CONFIG] SEMANTIC_THRESHOLD: {settings.SEMANTIC_THRESHOLD}")
+print(f"🔍 [CONFIG] LEXICAL_THRESHOLD: {settings.LEXICAL_THRESHOLD}")
+print(f"🔍 [CONFIG] KEYWORD_THRESHOLD: {settings.KEYWORD_THRESHOLD}")
+print(f"🔍 [CONFIG] DATA_VALUES_THRESHOLD: {settings.DATA_VALUES_THRESHOLD}")
+
 import os
 import re
 import time
@@ -197,106 +203,168 @@ QDRANT_CLIENT = get_qdrant_client()
 print("✅ Qdrant client ready!")
 
 # 2) Static prompt - EXPANDED WITH ALL CRITICAL RULES (loaded once to KV cache)
-STATIC_PROMPT = """Sen bir SQL uzmanısın. Kullanıcının Türkçe sorusunu aşağıdaki kurallara uyarak SQL'e çevir.
+STATIC_PROMPT = """Sen PostgreSQL uzmanısın. Türkçe soruyu SQL'e çevir.
 
-**KESİN KURALLAR:**
-1. ⚠️ SADECE "=== İZİN VERİLEN TABLO VE SÜTUNLAR ===" bölümündeki tablo ve sütunları kullan!
-   • Sütun isimlerini AYNEN KOPYALA - tek karakter bile değiştirme!
-   • OLMAYAN sütun uydurma!
+═══════════════════════════════════════════════════════════════════
+🎯 3 TEMEL KURAL
+═══════════════════════════════════════════════════════════════════
 
-2. ⚠️⚠️⚠️ Sorguda kullandığın sütun isimleriyle FROM bölümündeki bu kullandığın sütunların tabloları MUTLAKA EŞLEŞMELİ!
+1️⃣ SELECT KURALI:
+   • Kullanıcı sütun BELİRTMEDİYSE → SELECT * FROM TABLO1
+   • Kullanıcı sütun BELİRTTİYSE → SELECT TABLO1.SÜTUN1, TABLO1.SÜTUN2 FROM TABLO1
+   
+   🔴 ÇOK ÖNEMLİ: SÜTUN İSİMLERİNİ AYNEN KOPYALA - TEK KARAKTER BİLE DEĞİŞTİRME!
+   • Prompttaki tam sütun adını AYNEN yaz
+   • Sütun ismini kısaltma, değiştirme, uydurma!
+   
+   � SÜTUN-TABLO EŞLEŞME KURALI (KESİNLİKLE UYULMALI!):
+   ═══════════════════════════════════════════════════════
+   HER SÜTUN SADECE KENDİ TABLOSUNDA KULLANILIR!
+   Bir tabloda listelenen sütunu başka tabloda KULLANAMAZSIN!
+   SELECT'teki sütunlar ile FROM'daki tablo MUTLAKA EŞLEŞMELİ!
+   ═══════════════════════════════════════════════════════
 
-3. 🚨🚨🚨 NEGATİF FİLTRELER:
+2️⃣ WHERE KURALI:
+   ✅ WHERE KULLAN: Sadece kullanıcı AÇIKÇA koşul belirttiyse
+      Örnek: "aktif = 1 olanlar", "id = 123", "fiyat > 1000"
+   ❌ WHERE KULLANMA: "tüm", "bütün", "hepsi", "listele", "getir" kelimelerinde
+   
+   🚨 NEGATİF FİLTRELER (ÇOK ÖNEMLİ!):
    • "OLMAYAN", "değil", "hariç", "dışında" → != veya NOT kullan
-   • "TAKILI olmayan" = montaj_durumu != 'TAKILI'
-   • "aktif olmayan" = aktif != 1 veya aktif = 0
+   • Örnek: "TAKILI olmayan" → montaj_durumu != 'TAKILI'
+   • Örnek: "aktif olmayan" → aktif != 1 veya aktif = 0
 
-4. ⚠️ WHERE KULLANIM: Kullanıcı açıkça filtre/değer belirtmediği sürece WHERE KULLANMA!
+3️⃣ JOIN KURALI:
+   🔴 SADECE "ZİNCİRLEME JOIN YOLLARI" KISMINDAKİ JOIN'LERİ KULLAN!
+   • İsim benzerliği görerek kendi JOIN oluşturma!
+   • JOIN gerekiyorsa → Aşağıdaki hazır SQL kodunu AYNEN kopyala
+   • JOIN yolu yoksa → Tek tablodan SELECT yap
 
-5. 🚫🚫🚫 JOIN KURALLARI:
-   - "ZİNCİRLEME JOIN YOLLARI" bölümündeki SQL: satırını AYNEN KOPYALA!
-   - KENDİ JOIN'İNİ UYDURMA! Ara tabloyu ATLAMA! ::TEXT varsa MUTLAKA kopyala!
+5️⃣ TARİH İŞLEMLERİ (PostgreSQL):
+   🚨 KRİTİK: TEXT + INTERVAL ÇALIŞMAZ!
+   
+   ✅ DOĞRU:
+   • tarih_sütun::TIMESTAMP + INTERVAL '10 days'
+   • tarih_sütun::DATE + INTERVAL '1 month'
+   • CURRENT_DATE - INTERVAL '7 days'
+   
+   ❌ YANLIŞ:
+   • tarih_sütun::TEXT + INTERVAL '10 days'  ← HATA!
+   • tarih_sütun + '10 days'  ← HATA!
+   
+   Örnekler:
+   • "10 gün sonrası" → kesinti_tarih::TIMESTAMP + INTERVAL '10 days'
+   • "1 ay öncesi" → kayit_tarih::DATE - INTERVAL '1 month'
+   • "son 7 gün" → WHERE tarih >= CURRENT_DATE - INTERVAL '7 days'
 
-6. ⚠️ KOMPAKT SQL: Kullanıcı özel sütun belirtmediyse SELECT * kullan!
+═══════════════════════════════════════════════════════════════════
+�️ KARAR MATRİSİ (Kullanıcı ne istiyorsa SADECE onu yap!)
+═══════════════════════════════════════════════════════════════════
 
-7. 📅 TARİH GRUPLAMA:
-   - "aylık" → DATE_TRUNC('month', tarih) + GROUP BY
-   - "yıllık" → DATE_TRUNC('year', tarih) + GROUP BY
+"Tüm kayıtları göster/listele/getir" → SELECT * FROM TABLO1;
+"SÜTUN1'i getir" → SELECT TABLO1.SÜTUN1 FROM TABLO1;
+"SÜTUN1 ve SÜTUN2'yi göster" → SELECT TABLO1.SÜTUN1, TABLO1.SÜTUN2 FROM TABLO1;
+"X olan kayıtları bul" → SELECT * FROM TABLO1 WHERE TABLO1.X = 'değer';
+"X ve Y tablolarını birleştir" → JOIN kullan (ZİNCİRLEME JOIN YOLLARI'ndan)
+"Farklı değerleri göster" → SELECT DISTINCT TABLO1.SÜTUN1 FROM TABLO1;
+"Toplam/ortalama hesapla" → SELECT SUM/AVG(TABLO1.SÜTUN1) FROM TABLO1;
 
-8. 📊 DOMAIN BİLGİSİ:
-   - "TEDAŞ veri", "tüketim verisi" = l_integs_tedas_tesisat
-   - "yük profil", "load profile" = m_load_profile (t0, q1, q2)
-   - "sayaç" = e_sayac (seri_no)
-   - e_sayac ↔ l_integs_tedas_tesisat: seri_no::TEXT = sayac_seri_no::TEXT
-   - m_load_profile: meter_id, load_profile_date, t0, q1, q2 (load_profile_period YOK!)
-   - m_load_profile_periods: load_profile_period sütunu için
+═══════════════════════════════════════════════════════════════════
+�📝 SQL SORGU ÖRNEKLERİ (Tüm Senaryolar)
+═══════════════════════════════════════════════════════════════════
 
-9. 🚨 SÜTUN VALİDASYONU:
-   - SELECT'teki sütunlar MUTLAKA o tabloda olmalı!
-   - Sütun isimlerini CREATE TABLE'dan AYNEN kopyala!
-   - Olmayan sütun uydurma!
-
-
-**SQL YAPISI KARAR MATRİSİ:**
-- "Tüm kayıtları göster" → SELECT * FROM TABLO1
-- "SÜTUN1'i getir" → SELECT TABLO1.SÜTUN1 FROM TABLO1  
-- "SÜTUN1 ve SÜTUN2'yi göster" → SELECT TABLO1.SÜTUN1, TABLO1.SÜTUN2 FROM TABLO1
-- "filtre ile kayıt bul" → SELECT * FROM TABLO1 WHERE TABLO1.SÜTUN1 = 'değer'
-
-⚠️⚠️⚠️ TARİH FİLTRELERİ:
-- "aylık" → DATE_TRUNC('month', tarih_sütunu) veya EXTRACT(MONTH FROM tarih_sütunu)
-- "yıllık" → DATE_TRUNC('year', tarih_sütunu) veya EXTRACT(YEAR FROM tarih_sütunu)  
-- "günlük" → DATE_TRUNC('day', tarih_sütunu) veya DATE(tarih_sütunu)
-
-⚠️⚠️⚠️ JOIN ÖRNEKLERİ (GENEL KURAL):
-
-🚫 YANLIŞ ÖRNEK 1 - Ara tabloyu atladı:
-SELECT * FROM TABLO1 
-JOIN TABLO3 ON TABLO1.ID = TABLO3.TABLO1_ID  -- ❌ Ara TABLO2 yok!
-
-✅ DOĞRU ÖRNEK - Zinciri takip etti:
--- Zincir: TABLO1.ID → TABLO2.TABLO1_ID → TABLO2.REF → TABLO3.ID
-SELECT * FROM TABLO1
-JOIN TABLO2 ON TABLO1.ID = TABLO2.TABLO1_ID
-JOIN TABLO3 ON TABLO2.REF = TABLO3.ID
--- Her JOIN zincirdeki bir adımı kullandı!
-
-DİĞER ÖRNEKLER:
-
-Soru: "Tüm kayıtları listele"
+1️⃣ BASİT SELECT (Tüm sütunlar):
+Soru: "TABLO1 verilerini getir"
 SQL: SELECT * FROM TABLO1;
 
-Soru: "Sütun1'i getir"
-SQL: SELECT TABLO1.SUTUN1 FROM TABLO1;
+2️⃣ BELİRLİ SÜTUNLAR:
+Soru: "TABLO1'den SÜTUN1 ve SÜTUN2'yi getir"
+SQL: SELECT TABLO1.SÜTUN1, TABLO1.SÜTUN2 FROM TABLO1;
 
-Soru: "SUTUN1 ve SUTUN2'yi birlikte göster"
-SQL: SELECT TABLO1.SUTUN1, TABLO1.SUTUN2 FROM TABLO1;
+3️⃣ WHERE KOŞULU (Eşitlik):
+Soru: "SÜTUN1 değeri 123 olan kayıtlar"
+SQL: SELECT * FROM TABLO1 WHERE TABLO1.SÜTUN1 = 123;
 
-⚠️⚠️⚠️ TARİH GRUPLAMA KURALI:
-Kullanıcı "aylık" diyorsa → DATE_TRUNC('month', tarih_sütunu) + GROUP BY DATE_TRUNC('month', tarih_sütunu)
-Kullanıcı "yıllık" diyorsa → DATE_TRUNC('year', tarih_sütunu) + GROUP BY DATE_TRUNC('year', tarih_sütunu)
+4️⃣ WHERE KOŞULU (Karşılaştırma):
+Soru: "SÜTUN2 1000'den büyük kayıtlar"
+SQL: SELECT * FROM TABLO1 WHERE TABLO1.SÜTUN2 > 1000;
 
-DİĞER ÖRNEKLER:
+5️⃣ WHERE KOŞULU (Metin):
+Soru: "DURUM aktif olan kayıtlar"
+SQL: SELECT * FROM TABLO1 WHERE TABLO1.DURUM = 'aktif';
 
-Soru: "TABLO1 ve TABLO2’deki kayıtları birleştir ve getir"
-SQL: SELECT TABLO1.*, TABLO2.* FROM TABLO1 JOIN TABLO2 ON TABLO1.ID = TABLO2.TABLO1_ID;
+6️⃣ JOIN (İki tablo):
+Soru: "TABLO1 ve TABLO2'yi birleştir"
+SQL: SELECT * FROM TABLO1 JOIN TABLO2 ON TABLO1.ID = TABLO2.FK_ID;
 
-Soru: "123 değerine sahip kayıtları bul"
-SQL: SELECT * FROM TABLO1 WHERE TABLO1.ID = 123;
+7️⃣ SIRALAMA:
+Soru: "SÜTUN1'e göre azalan sırada sırala"
+SQL: SELECT * FROM TABLO1 ORDER BY TABLO1.SÜTUN1 DESC;
 
-Soru: "2024 yılındaki aylık toplamları hesapla"
-SQL: SELECT DATE_TRUNC('month', TABLO1.TARİH) as ay, SUM(TABLO1.DEĞER) 
+8️⃣ LİMİT (En yüksek N):
+Soru: "en yüksek 10 kayıt"
+SQL: SELECT * FROM TABLO1 ORDER BY TABLO1.SÜTUN1 DESC LIMIT 10;
+
+9️⃣ GRUPLAMA:
+Soru: "KATEGORI'ye göre grupla ve say"
+SQL: SELECT TABLO1.KATEGORI, COUNT(*) FROM TABLO1 GROUP BY TABLO1.KATEGORI;
+
+🔟 TARİH İŞLEMİ (INTERVAL):
+Soru: "kesinti başlangıç tarihinden 10 gün sonrası"
+SQL: SELECT kesinti_baslangic::TIMESTAMP + INTERVAL '10 days' FROM TABLO1;
+🚨 YANLIŞ: kesinti_baslangic::TEXT + INTERVAL '10 days' ← HATA!
+
+🔟 TOPLAMA/ORTALAMA:
+Soru: "toplam SÜTUN1 değeri"
+SQL: SELECT SUM(TABLO1.SÜTUN1) FROM TABLO1;
+
+1️⃣1️⃣ TARİH FİLTRESİ:
+Soru: "son 7 günlük kayıtlar"
+SQL: SELECT * FROM TABLO1 WHERE TABLO1.TARIH >= CURRENT_DATE - INTERVAL '7 days';
+
+1️⃣2️⃣ AYLIK GRUPLAMA:
+Soru: "aylık toplam hesapla"
+SQL: SELECT DATE_TRUNC('month', TABLO1.TARIH) AS ay, SUM(TABLO1.SÜTUN1) 
      FROM TABLO1 
-     WHERE EXTRACT(YEAR FROM TABLO1.TARİH) = 2024
-     GROUP BY DATE_TRUNC('month', TABLO1.TARİH);
+     GROUP BY DATE_TRUNC('month', TABLO1.TARIH);
 
-Soru: "En yüksek 10 değeri göster"
-SQL: SELECT * FROM TABLO1 ORDER BY TABLO1.DEĞER DESC LIMIT 10;
+1️⃣3️⃣ FARKLI/EŞSİZ DEĞERLER (DISTINCT):
+Soru: "farklı SÜTUN1 değerlerini göster"
+SQL: SELECT DISTINCT TABLO1.SÜTUN1 FROM TABLO1;
 
-⚠️⚠️⚠️ KRİTİK: İstenen sütunlar hangi tabloda varsa O tabloyu JOIN ile kullan!
-🚫 YANLIŞ: Sütun başka tabloda olmasına rağmen JOIN yapmadan erişmeye çalışma!
-✅ DOĞRU: Sütunun olduğu tabloyu "ZİNCİRLEME JOIN YOLLARI"na göre JOIN et!
+✅ Yük profili istendiğinde "load_profile" tablosunu ve sütunlarını kullan!!
+❌ YANLIŞ: "m_load_profile_periods" tablosunu ve sütunlarını kullanma!
+
+═══════════════════════════════════════════════════════════════════
+❌ YANLIŞ KULLANIM ÖRNEĞİ (BUNU YAPMA!)
+═══════════════════════════════════════════════════════════════════
+
+Promptta şu tablolar var:
+TABLO1 (id, tarih, toplam)
+TABLO2 (id, kullanici_id, fiyat)
+
+❌ YANLIŞ:
+SELECT TABLO1.fiyat FROM TABLO1  -- fiyat TABLO2'de, TABLO1'de değil!
+
+✅ DOĞRU:
+SELECT TABLO2.fiyat FROM TABLO2  -- Doğru tablo kullanıldı
+
+═══════════════════════════════════════════════════════════════════
+🚨 ÇIKTI FORMATI
+═══════════════════════════════════════════════════════════════════
+
+SADECE SQL YAZ! Açıklama YAZMA!
+
+✅ DOĞRU:
+SELECT * FROM TABLO1;
+
+❌ YANLIŞ:
+• SQL'den sonra açıklama YAPMA
+• WHERE 1 = 1 KULLANMA
+• Sütun KISALTMA
 """
+
+
 
 # ================ STATIC PROMPT PRIMING =================
 def ensure_static_session():
@@ -350,11 +418,12 @@ def generate_strict_prompt_dynamic_only(
 
     # Minimal reinforcement - main rules now in static prompt (KV cached)
     reinforce_rules = """
-🎯 HATIRLATMA:
-• Sadece yukarıdaki tablolar/sütunları kullan
-• "ZİNCİRLEME JOIN YOLLARI"ndaki SQL: satırını AYNEN kopyala
-• Olmayan sütun uydurma!
-• Kullanıcı özel sütun belirtmediyse SELECT * kullan
+🚨 3 KRİTİK KURAL:
+1️⃣ Sütun belirtilmedi mi? → SELECT *
+2️⃣ Filtre/koşul yok mu? → WHERE KULLANMA!
+3️⃣ İstenen sütunlar tek tabloda mı? → JOIN KULLANMA!
+
+⚠️ JOIN gerekliyse: "ZİNCİRLEME JOIN YOLLARI"ndaki SQL: satırını AYNEN kopyala
 """
 
     # Make value hints more controlled
@@ -381,6 +450,8 @@ def generate_strict_prompt_dynamic_only(
 {reinforce_rules}
 
 **KULLANICI SORUSU:** "{natural_query}"
+
+🚨 ÇOK ÖNEMLİ: Sadece SQL yaz! Açıklama, yorum veya başka metin yazma!
 
 **SQL SORGUSU:**
 ```sql
@@ -747,6 +818,16 @@ def hybrid_search_with_separate_results(natural_query: str, top_k: int = 15, sim
         enriched_query = natural_query
         query_lower = natural_query.lower()
         
+        # 🔥 EXACT TABLE NAME MATCH: Boost score if query contains exact table name
+        exact_table_boost = []
+        query_words = query_lower.replace("_", " ").split()
+        
+        # Check if query contains table-like patterns (a_il, e_sayac, m_load_profile, etc.)
+        for word in query_words:
+            if "_" in word or (len(word) > 2 and word.startswith(('a_', 'e_', 'm_', 'l_', 'c_'))):
+                exact_table_boost.append(word)
+                print(f"🎯 [EXACT_MATCH_BOOST] Detected table name: '{word}'")
+        
         # Map common phrases to specific table/column names
         if "tüketim verisi" in query_lower or "tedaş" in query_lower or "tedas" in query_lower:
             enriched_query += " l_integs_tedas_tesisat tedas_update_date sayac_seri_no"
@@ -783,6 +864,12 @@ def hybrid_search_with_separate_results(natural_query: str, top_k: int = 15, sim
             table = result.get("table", "")
             similarity = result.get("similarity", 0)
             if table:
+                # 🔥 BOOST: If table name exactly matches query, give max score
+                table_lower = table.lower().replace("helios.", "")
+                if exact_table_boost and any(boost in table_lower for boost in exact_table_boost):
+                    similarity = max(similarity, 0.95)  # Boost to very high score
+                    print(f"🚀 [EXACT_MATCH_BOOST] Table '{table}' boosted to {similarity:.3f}")
+                
                 if table not in all_table_scores or similarity > all_table_scores[table]:
                     all_table_scores[table] = similarity
         
@@ -1445,7 +1532,7 @@ def format_compact_schema_prompt_with_keywords(
 
     # Show FK-PK relationships with data types and SQL examples
     prompt_parts.append("\n=== ZİNCİRLEME JOIN YOLLARI ===")
-    prompt_parts.append("(Her JOIN yolunda veri tipleri ve hazır SQL örneği verilmiştir - AYNEN KOPYALA!)")
+    prompt_parts.append("(Her JOIN yolunda veri tipleri ve hazır SQL örneği verilmiştir - EĞER JOIN KULLANILACAKSA aynen kopyala!)")
     prompt_parts.append("")
     
     if paths:
@@ -2917,7 +3004,7 @@ class InteractiveSQLGenerator:
                 max_tokens=500,  # Optimize: 800 -> 500 (hız için)
                 temperature=0,
                 top_p=0.9,
-                stop=[";", "Kullanıcı", "Açıklama", "ÖRNEK"],
+                stop=[";", "Kullanıcı", "Açıklama", "AÇIKLAMA", "**AÇIKLAMA**", "ÖRNEK", "```\n\n", "<|end"],
                 stream=False,
                 echo=False
             )
@@ -2937,7 +3024,14 @@ class InteractiveSQLGenerator:
         sql_text = extract_sql_from_response(text)
         print(f"⏱️  [7] SQL extraction: {time.time() - extraction_start:.2f}s")
         
-        # 10. Auto-fix
+        # 10. Clean meaningless WHERE clauses
+        sql_text, where_changes = clean_meaningless_where_clauses(sql_text)
+        if where_changes:
+            print(f"🧹 Cleaned WHERE clauses:")
+            for c in where_changes:
+                print(f"  - {c}")
+        
+        # 11. Auto-fix
         autofix_start = time.time()
         try:
             print("🔧 Auto-fix running...")
@@ -2964,7 +3058,7 @@ class InteractiveSQLGenerator:
         
         print(f"⏱️  [8] Auto-fix: {time.time() - autofix_start:.2f}s")
         
-        # 11. Format SQL
+        # 12. Format SQL
         format_start = time.time()
         try:
             parsed = sqlparse.parse(sql_to_format)
@@ -3753,6 +3847,32 @@ class InteractiveSQLGenerator:
 
 
 
+def clean_meaningless_where_clauses(sql_text: str) -> tuple[str, list]:
+    """Remove meaningless WHERE clauses like WHERE 1 = 1, WHERE TRUE, etc."""
+    changes = []
+    cleaned_sql = sql_text
+    
+    # Pattern 1: WHERE 1 = 1
+    pattern1 = r'\s+WHERE\s+1\s*=\s*1\s*;'
+    if re.search(pattern1, cleaned_sql, re.IGNORECASE):
+        cleaned_sql = re.sub(pattern1, ';', cleaned_sql, flags=re.IGNORECASE)
+        changes.append("Removed meaningless 'WHERE 1 = 1'")
+    
+    # Pattern 2: WHERE TRUE
+    pattern2 = r'\s+WHERE\s+TRUE\s*;'
+    if re.search(pattern2, cleaned_sql, re.IGNORECASE):
+        cleaned_sql = re.sub(pattern2, ';', cleaned_sql, flags=re.IGNORECASE)
+        changes.append("Removed meaningless 'WHERE TRUE'")
+    
+    # Pattern 3: WHERE 1=1 (multiline - before GROUP BY, ORDER BY, LIMIT, etc.)
+    pattern3 = r'\s+WHERE\s+1\s*=\s*1\s*(?=\n|$|\s+GROUP\s+BY|\s+ORDER\s+BY|\s+LIMIT)'
+    if re.search(pattern3, cleaned_sql, re.IGNORECASE):
+        cleaned_sql = re.sub(pattern3, '', cleaned_sql, flags=re.IGNORECASE)
+        changes.append("Removed meaningless 'WHERE 1 = 1' (before clause)")
+    
+    return cleaned_sql, changes
+
+
 def auto_fix_sql_identifiers(sql_text, schema_pool, value_context=None, schema_prefix=None):
     """
     Geliştirilmiş auto-fix:
@@ -3930,7 +4050,7 @@ def auto_fix_sql_identifiers(sql_text, schema_pool, value_context=None, schema_p
         # Step 2: Column resolution - IMPROVED
         i = 0
         
-        # Collect table names and aliases
+        # Collect table names and aliases (SEPARATELY to avoid confusion)
         table_names_and_aliases = set()
         for table in from_tables_order:
             # Add both prefixed and unprefixed versions
@@ -3961,7 +4081,14 @@ def auto_fix_sql_identifiers(sql_text, schema_pool, value_context=None, schema_p
                     i += 1
                     continue
                 
-                # Skip if it's a table name or alias
+                # 🚨 FIX: Skip if it's a table reference (before dot) - DON'T treat as column
+                if is_dot_after:
+                    # This is a table/alias reference before a dot (e.g., "e_sayac" in "e_sayac.seri_no")
+                    # Skip it - it's NOT a column name
+                    i += 1
+                    continue
+                
+                # Skip if it's a standalone table name or alias (not qualified, not before dot)
                 if (not is_qualified and not is_dot_after and 
                     token.value.lower() in table_names_and_aliases):
                     i += 1
@@ -3998,7 +4125,7 @@ def auto_fix_sql_identifiers(sql_text, schema_pool, value_context=None, schema_p
                                     changes.append(f"Column '{column_name}' -> '{best_column}' in table '{canonical_table}'")
                                     token_updates[i] = best_column
                             else:
-                                # Fuzzy match
+                                # Fuzzy match in current table
                                 best_col, best_score = None, 0
                                 for c in cols:
                                     s = fuzz.ratio(column_name.lower(), c.lower())
@@ -4012,7 +4139,25 @@ def auto_fix_sql_identifiers(sql_text, schema_pool, value_context=None, schema_p
                                     changes.append(f"Column '{column_name}' -> '{best_col}' in table '{canonical_table}' (score: {best_score})")
                                     token_updates[i] = best_col
                                 else:
-                                    issues.append(f"Column '{column_name}' not found in table '{canonical_table}'. Available: {cols}")
+                                    # 🆕 LOW SCORE: Search for exact match in OTHER tables
+                                    found_in_other_table = None
+                                    for other_table, other_data in schema_pool.items():
+                                        if other_table == canonical_table:
+                                            continue  # Skip current table
+                                        other_cols = other_data.get('columns', []) if isinstance(other_data, dict) else other_data
+                                        if any(c.lower() == column_name.lower() for c in other_cols):
+                                            found_in_other_table = other_table
+                                            break
+                                    
+                                    if found_in_other_table:
+                                        # CRITICAL FIX: Column exists in different table!
+                                        print(f"🚨 CRITICAL: '{column_name}' NOT in '{canonical_table}' but FOUND in '{found_in_other_table}'!")
+                                        changes.append(f"Table '{canonical_table}' -> '{found_in_other_table}' for column '{column_name}'")
+                                        # Update the table reference (token before the dot)
+                                        if table_index >= 0:
+                                            token_updates[table_index] = found_in_other_table
+                                    else:
+                                        issues.append(f"Column '{column_name}' not found in table '{canonical_table}'. Available: {cols}")
                         else:
                             issues.append(f"Could not resolve table '{table_ref}' for qualified column '{table_ref}.{column_name}'. Available tables: {list(schema_pool.keys())}")
                 
@@ -4143,23 +4288,41 @@ def extract_sql_from_response(text: str) -> str:
         m = re.search(pat, text, re.IGNORECASE | re.DOTALL)
         if m:
             sql = m.group(1).strip()
+            
+            # ✅ FIX: Remove trailing ``` if LLM added it after ;
+            sql = re.sub(r'\s*```\s*$', '', sql)
+            
+            # ✅ FIX: Remove **AÇIKLAMA:** or explanations after ;
+            sql = re.sub(r';\s*(\*\*)?A[ÇC]IKLAMA(\*\*)?:.*$', ';', sql, flags=re.IGNORECASE | re.DOTALL)
+            sql = re.sub(r';\s*--.*$', ';', sql, flags=re.MULTILINE)  # Remove inline comments after ;
+            
             # If the block contains multiple statements, return the entire block.
             if not sql.endswith(';'):
                 sql += ';'
-            return sql
+            return sql.strip()
 
     # 2) If there's a clear 'SELECT ... ;' pattern in the text (multiline)
     m = re.search(r'(SELECT\b[\s\S]*?;)', text, re.IGNORECASE)
     if m:
-        return m.group(1).strip()
+        sql = m.group(1).strip()
+        
+        # ✅ FIX: Clean up explanations
+        sql = re.sub(r';\s*(\*\*)?A[ÇC]IKLAMA(\*\*)?:.*$', ';', sql, flags=re.IGNORECASE | re.DOTALL)
+        sql = re.sub(r';\s*```.*$', ';', sql, flags=re.DOTALL)
+        
+        return sql.strip()
 
     # 3) If SELECT exists but there's no semicolon, take from SELECT to the end
     idx = text.upper().find('SELECT')
     if idx != -1:
         sql = text[idx:].strip()
+        
+        # ✅ FIX: Stop at first ``` or explanation marker
+        sql = re.split(r'```|\*\*A[ÇC]IKLAMA\*\*|A[ÇC]IKLAMA:', sql, flags=re.IGNORECASE)[0].strip()
+        
         if not sql.endswith(';'):
             sql += ';'
-        return sql
+        return sql.strip()
 
     # 4) If not found, raise an error
     raise ValueError(f"❌ SQL çıkarılamadı: {text[:200]}")

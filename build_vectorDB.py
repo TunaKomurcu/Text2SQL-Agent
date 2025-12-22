@@ -546,183 +546,51 @@ def main():
     loaded_schema_keywords = load_schema_keywords()
 
     SCHEMA_KEYWORDS_EXAMPLE = {
-        # Yük Profil Tabloları
-        "m_load_profile": {
+        # Example: Users table
+        "users": {
             "table_keywords": [
-                ("yük profil", "translation"),
-                ("load profile", "translation"),
-                ("enerji tüketim", "translation"),
-                ("saatlik veri", "translation"),
-                ("profil verileri", "translation")
+                ("kullanıcı", "translation"),
+                ("user", "translation"),
+                ("hesap", "translation"),
+                ("account", "translation")
             ],
             "column_keywords": {
-                "meter_id": [("sayaç", "translation"), ("sayaç kimliği", "translation")],
-                "load_profile_date": [("profil tarihi", "translation"), ("zaman", "translation"), ("tarih", "translation")],
-                "t0": [("toplam enerji", "translation"), ("aktif enerji", "translation")],
-                "l1_current": [("faz 1 akım", "translation"), ("akım", "translation")],
-                "l1_voltage": [("faz 1 gerilim", "translation"), ("voltaj", "translation")],
+                "user_id": [("kullanıcı kimliği", "translation"), ("user id", "translation")],
+                "email": [("e-posta", "translation"), ("mail", "translation")],
+                "created_at": [("oluşturulma tarihi", "translation"), ("kayıt tarihi", "translation")],
+                "full_name": [("ad soyad", "translation"), ("isim", "translation")],
             }
         },
         
-        "m_load_profile_periods": {
+        # Example: Orders table
+        "orders": {
             "table_keywords": [
-                ("yük profil periyot", "translation"),
-                ("profil dönem", "translation"),
-                ("load profile period", "translation")
+                ("sipariş", "translation"),
+                ("order", "translation"),
+                ("satın alma", "translation"),
+                ("purchase", "translation")
             ],
             "column_keywords": {
-                "load_profile_period": [("profil periyodu", "translation"), ("dönem", "translation")]
+                "order_id": [("sipariş numarası", "translation"), ("order number", "translation")],
+                "order_date": [("sipariş tarihi", "translation"), ("tarih", "translation")],
+                "total_amount": [("toplam tutar", "translation"), ("fiyat", "translation"), ("miktar", "translation")],
+                "status": [("durum", "translation"), ("status", "translation")],
             }
         },
         
-        # Sayaç Tabloları
-        "e_sayac": {
+        # Example: Products table
+        "products": {
             "table_keywords": [
-                ("sayaç", "translation"),
-                ("elektrik sayacı", "translation"),
-                ("meter", "translation"),
-                ("ölçüm cihazı", "translation")
+                ("ürün", "translation"),
+                ("product", "translation"),
+                ("mal", "translation"),
+                ("stok", "translation")
             ],
             "column_keywords": {
-                "seri_no": [("seri numarası", "translation"), ("serial number", "translation"), ("sayaç numarası", "translation")],
-                "sayac_id": [("sayaç kimliği", "translation"), ("meter id", "translation")],
-                "guncelleme_zamani": [("güncelleme", "translation"), ("son güncelleme", "translation"), ("tarih", "translation")],
-                "marka": [("marka", "translation"), ("brand", "translation")],
-                "model": [("model", "translation")],
-                "aktif": [("aktif", "translation"), ("durum", "translation"), ("active", "translation")],
-            }
-        },
-        
-        # Ham Veri Tabloları
-        "i_meter_raw_data": {
-            "table_keywords": [
-                ("sayaç ham veri", "translation"),
-                ("meter raw data", "translation"),
-                ("ölçüm verisi", "translation"),
-                ("ham veri", "translation")
-            ],
-            "column_keywords": {
-                "meter_id": [("sayaç", "translation"), ("sayaç kimliği", "translation")],
-                "raw_data": [("ham veri", "translation"), ("işlenmemiş veri", "translation")],
-            }
-        },
-        
-        "i_meter_incoming_data_latest": {
-            "table_keywords": [
-                ("sayaç son veri", "translation"),
-                ("meter latest data", "translation"),
-                ("son gelen veri", "translation"),
-                ("güncel veri", "translation")
-            ],
-            "column_keywords": {
-                "meter_id": [("sayaç", "translation")],
-                "incoming_data": [("gelen veri", "translation"), ("alınan veri", "translation")],
-            }
-        },
-        
-        # Modem Tabloları
-        "i_modem_incoming_data": {
-            "table_keywords": [
-                ("modem gelen veri", "translation"),
-                ("modem incoming data", "translation"),
-                ("modem verisi", "translation")
-            ],
-            "column_keywords": {
-                "modem_id": [("modem", "translation"), ("modem kimliği", "translation")],
-                "data": [("veri", "translation"), ("data", "translation")],
-            }
-        },
-        
-        # İstatistik Tabloları
-        "r_meter_load_profile_stat": {
-            "table_keywords": [
-                ("sayaç profil istatistik", "translation"),
-                ("meter profile statistics", "translation"),
-                ("yük profil istatistik", "translation"),
-                ("profil rapor", "translation")
-            ],
-            "column_keywords": {
-                "meter_id": [("sayaç", "translation")],
-                "profile_stat": [("profil istatistiği", "translation"), ("istatistik", "translation")],
-            }
-        },
-        
-        # TEDAŞ Entegrasyon
-        "l_integs_tedas_load_profile": {
-            "table_keywords": [
-                ("tedaş yük profil", "translation"),
-                ("tedaş load profile", "translation"),
-                ("dağıtım yük profil", "translation"),
-                ("tedaş entegrasyon", "translation")
-            ],
-            "column_keywords": {
-                "load_profile": [("yük profili", "translation"), ("profil", "translation")],
-            }
-        },
-        
-        "l_integs_tedas_tesisat": {
-            "table_keywords": [
-                ("tedaş tesisat", "translation"),
-                ("tesisat bilgi", "translation"),
-                ("installation", "translation"),
-                ("abone tesisat", "translation")
-            ],
-            "column_keywords": {
-                "firma_abone_id": [("abone", "translation"), ("subscriber", "translation"), ("firma", "translation")],
-                "sayac_seri_no": [("sayaç seri", "translation"), ("seri numarası", "translation")],
-                "tesisat_status": [("durum", "translation"), ("status", "translation"), ("tesisat durumu", "translation")],
-            }
-        },
-        
-        # Alarm Tabloları
-        "w_alarm_data": {
-            "table_keywords": [
-                ("alarm", "translation"),
-                ("uyarı", "translation"),
-                ("alarm verisi", "translation"),
-                ("arıza", "translation")
-            ],
-            "column_keywords": {
-                "alarm_type": [("alarm tipi", "translation"), ("uyarı türü", "translation")],
-                "alarm_date": [("alarm tarihi", "translation"), ("uyarı zamanı", "translation")],
-            }
-        },
-        
-        # Lokasyon Tabloları
-        "a_il": {
-            "table_keywords": [
-                ("il", "translation"),
-                ("şehir", "translation"),
-                ("province", "translation"),
-                ("city", "translation")
-            ],
-            "column_keywords": {
-                "il_adi": [("il adı", "translation"), ("şehir adı", "translation")],
-            }
-        },
-        
-        "a_ilce": {
-            "table_keywords": [
-                ("ilçe", "translation"),
-                ("district", "translation"),
-                ("county", "translation")
-            ],
-            "column_keywords": {
-                "ilce_adi": [("ilçe adı", "translation"), ("district name", "translation")],
-            }
-        },
-        
-        # Malzeme/Envanter
-        "e_malzeme": {
-            "table_keywords": [
-                ("malzeme", "translation"),
-                ("material", "translation"),
-                ("ekipman", "translation"),
-                ("equipment", "translation")
-            ],
-            "column_keywords": {
-                "malzeme_adi": [("malzeme adı", "translation"), ("material name", "translation")],
-                "montaj_durumu": [("montaj", "translation"), ("installation status", "translation")],
+                "product_id": [("ürün kodu", "translation"), ("product code", "translation")],
+                "product_name": [("ürün adı", "translation"), ("isim", "translation")],
+                "price": [("fiyat", "translation"), ("ücret", "translation")],
+                "category": [("kategori", "translation"), ("tür", "translation")],
             }
         },
     }

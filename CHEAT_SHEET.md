@@ -386,5 +386,3 @@ rm -rf models/.cache && python build_vectorDB.py
 **Dil**: Türkçe
 
 ---
-
-Bu cheat sheet'i yazdır ve masanızda bulundur! 📌

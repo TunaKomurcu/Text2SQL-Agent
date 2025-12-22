@@ -432,14 +432,7 @@ Bu projeyi mümkün kılan açık kaynak projelere teşekkürler:
 
 <div align="center">
 
-**Sorularınız mı var?** 
-
-Dokümantasyonları kontrol edin veya issue açın!
-
 **⭐ Projeyi beğendiyseniz yıldız vermeyi unutmayın! ⭐**
-
-</div>- **DOSYA_YAPISI.md** - Detaylı proje yapısı
-- **Teknik Rapor** - Sistem tasarımı ve algoritmaları
 
 ---
 

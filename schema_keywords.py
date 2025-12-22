@@ -1,4 +1,4 @@
-# Schema Keywords - Helios DB için Türkçe anahtar kelimeler
+# Schema Keywords - Anahtar kelimeler
 
 SCHEMA_KEYWORDS = {
     "e_sayac": {
@@ -29,5 +29,7 @@ SCHEMA_KEYWORDS = {
         }
     },
     
+    # Bu kısım manuel olarak Veri tabanına özel olarak eklenmelidir...
     # Diğer önemli tablolar eklenebilir...
+    
 }

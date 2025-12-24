@@ -245,54 +245,6 @@ python -c "from qdrant_client import QdrantClient; client = QdrantClient('localh
 
 ---
 
-## 🧪 Test Komutları
-
-```powershell
-# GPU kontrolü
-python test_gpu.py
-
-# Keyword sistemi
-python test_keywords_prompt.py
-
-# Bilinen çalışan sorgular
-python test_working_queries.py
-
-# Veritabanı veri kontrolü
-python check_ankara_data.py
-python check_meter_id.py
-python check_columns.py
-```
-
----
-
-## 📝 Örnek API Çağrıları
-
-### REST Endpoint
-```bash
-curl -X POST http://localhost:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Ankara daki sayaçları listele"}'
-```
-
-### WebSocket (JavaScript)
-```javascript
-const ws = new WebSocket('ws://localhost:8000/ws/chat');
-
-ws.onopen = () => {
-  ws.send(JSON.stringify({
-    message: "Ankara'daki sayaçları listele",
-    session_id: "unique-session-id"
-  }));
-};
-
-ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  console.log(data);
-};
-```
-
----
-
 ## 🚀 Production Deployment
 
 ### Sunucu Gereksinimleri

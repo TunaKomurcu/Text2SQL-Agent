@@ -1,5 +1,8 @@
 # 🚀 Text2SQL - Hızlı Referans Kılavuzu
 
+> **Modular Clean Architecture** - 6 katman, 25 modül, modüler kod yapısı  
+> **Detaylar:** [MIMARI.md](MIMARI.md) | [DOSYA_YAPISI.md](DOSYA_YAPISI.md)
+
 ## ⚡ Hızlı Başlangıç (2 Dakika)
 
 ```powershell
@@ -71,7 +74,53 @@ uvicorn Text2SQL_Agent:app --host 0.0.0.0 --port 8000 --workers 4
 
 ---
 
-## 🔧 Konfigürasyon (.env)
+## 🏗️ Modüler Mimari
+
+### Katman Yapısı (Clean Architecture)
+```
+api/         - FastAPI routes, WebSocket (3 dosya)
+  ↓
+core/        - LLM, prompts, SQL generation (5 dosya)
+  ↓  
+schema/      - FK graph, scoring, paths (5 dosya)
+sql/         - Parser, fixer, executor (4 dosya)
+search/      - Semantic, lexical, keyword search (6 dosya)
+  ↓
+utils/       - GPU, DB, Qdrant, models (5 dosya)
+```
+
+### Import Örnekleri
+```python
+# Core İşlevler
+from core.sql_generator import InteractiveSQLGenerator
+from core.llm_manager import get_llm_instance
+from core.prompt_builder import generate_strict_prompt_dynamic_only
+
+# Arama ve Schema
+from search.hybrid import hybrid_search_with_separate_results
+from schema.builder import build_compact_schema_pool
+from schema.loader import load_fk_graph
+
+# Yardımcı Fonksiyonlar
+from utils.db import get_connection
+from utils.qdrant import get_qdrant_client
+from utils.models import ModelManager
+```
+
+### Test Komutları
+```powershell
+# Sistem testi (modül importları, GPU, DB)
+python test_system.py
+
+# Hata kontrolü (Pylance)
+from core import *
+from utils import *
+# Hiçbir hata çıkmamalı
+```
+
+---
+
+## 📁 Dosya Yapısı
 
 ### Minimum Gerekli
 ```bash
@@ -244,25 +293,6 @@ ws.onmessage = (event) => {
 
 ---
 
-## 🎯 Örnek Sorgular (Demo için)
-
-### Basit
-- "Tüm tabloları listele"
-- "Sayaçları göster"
-- "İlk 10 kaydı getir"
-
-### Orta
-- "Ankara'daki sayaçları listele"
-- "Her ildeki sayaç sayısını hesapla"
-- "Aktif sayaçları göster"
-
-### İleri
-- "Son 2 saatlik yük profil verilerini getir"
-- "Ortalamadan fazla tüketen sayaçları bul"
-- "İstanbul'daki aktif sayaçların günlük ortalama tüketimini hesapla"
-
----
-
 ## 🚀 Production Deployment
 
 ### Sunucu Gereksinimleri
@@ -377,7 +407,7 @@ rm -rf models/.cache && python build_vectorDB.py
 
 ---
 
-**Son Güncelleme**: 18 Aralık 2024
+**Son Güncelleme**: Aralık 2024
 
 **Sürüm**: 1.0
 

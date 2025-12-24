@@ -39,9 +39,9 @@ class Settings(BaseSettings):
 
     # LLM
     LLM_MODEL_PATH: str = "./models/OpenR1-Qwen-7B-Turkish-Q4_K_M.gguf"
-    LLM_N_CTX: int = 4096
+    LLM_N_CTX: int = 8192  # Extended context window
     LLM_N_THREADS: int = 8
-    LLM_N_BATCH: int = 512  # Artırıldı: 128 -> 512 (GPU hızlandırma)
+    LLM_N_BATCH: int = 512  
     LLM_LOW_VRAM: bool = False
     LLM_VERBOSE: bool = False
     

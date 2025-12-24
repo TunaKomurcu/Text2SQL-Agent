@@ -34,7 +34,7 @@ models/*.joblib
 *~
 
 # Test dosyaları (GitHub'a gitmeyecek)
-test_*.py
+# test_*.py
 check_*.py
 verify_*.py
 query_test*.py

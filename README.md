@@ -12,11 +12,46 @@
 
 ## 📚 Dokümantasyon
 
-Projeyi detaylı şekilde anlamak için:
+Proje dokümantasyonu:
 
 - 🏗️ **[MIMARI.md](MIMARI.md)** - Teknik mimari ve algoritma detayları
 - 🚀 **[KURULUM_KILAVUZU.md](KURULUM_KILAVUZU.md)** - Detaylı kurulum adımları
 - 📁 **[DOSYA_YAPISI.md](DOSYA_YAPISI.md)** - Proje klasör yapısı
+- ⚡ **[CHEAT_SHEET.md](CHEAT_SHEET.md)** - Hızlı referans ve komutlar
+- 🧪 **[test_system.py](test_system.py)** - System validation tests
+
+---
+
+## �️ Modular Architecture
+
+**Clean Architecture** prensipleri ile tasarlanmış modern 6 katmanlı mimari:
+
+### Katmanlar
+- **`api/`** (3 dosya) - FastAPI routes, WebSocket handlers, HTTP endpoints
+- **`core/`** (5 dosya) - LLM management, prompt building, error analysis, SQL generation  
+- **`schema/`** (5 dosya) - FK graph, column scoring, path finding, schema building
+- **`sql/`** (4 dosya) - SQL parsing, auto-fixing, execution
+- **`search/`** (6 dosya) - Semantic, lexical, keyword, hybrid search strategies
+- **`utils/`** (5 dosya) - GPU detection, database, Qdrant, model management
+
+### Özellikler
+
+**Mimari Kalitesi:**
+- ✅ **SOLID Principles** - Her modül tek sorumluluk prensibi ile tasarlandı
+- ✅ **Clean Dependencies** - Tek yönlü bağımlılık akışı (üstten alta)
+- ✅ **Test Edilebilir** - Her katman mock'lanabilir ve izole edilebilir
+- ✅ **Ölçeklenebilir** - Yeni özellikler mevcut kodu bozmadan eklenebilir
+
+**Kod Organizasyonu:**
+- 📦 25 özelleşmiş modül (ortalama ~160 satır/modül)
+- 🎯 En büyük modül: 860 satır (sql_generator.py)
+- 📊 Toplam: ~4,000 satır kod
+- 🔄 Sıfır döngüsel bağımlılık
+
+**Detaylı Dokümantasyon:**
+- [MIMARI.md](MIMARI.md) - Teknik mimari ve detaylar
+- [DOSYA_YAPISI.md](DOSYA_YAPISI.md) - Dosya organizasyonu
+- [CHEAT_SHEET.md](CHEAT_SHEET.md) - Hızlı referans
 
 ---
 
@@ -108,37 +143,6 @@ http://localhost:8000/static/chat.html
 ```
 
 > **Not**: Detaylı kurulum için [KURULUM_KILAVUZU.md](KURULUM_KILAVUZU.md) dosyasına bakın.
-
----
-
-## 📁 Proje Yapısı
-
-```
-test/
-├── 📂 models/               # ML modelleri
-│   ├── fasttext_lexical_model.model
-│   ├── tfidf_vectorizer.joblib
-│   └── openr1-qwen-7b-turkish*.gguf
-├── 📂 static/               # Web arayüzü
-│   └── chat.html
-├── 📂 docker/               # Docker configs
-│   ├── docker-compose.local.yml    # Test ortamı
-│   ├── docker-compose.yml          # Production
-│   └── init_db.sql                 # Örnek DB
-├── 📂 scripts/              # Yardımcı scriptler
-│   └── setup_env.ps1
-├── Text2SQL_Agent.py        # 🎯 Ana uygulama (4200+ satır)
-├── build_vectorDB.py        # Veritabanı indexleme
-├── config.py                # Konfigürasyon
-├── fk_graph.json            # FK ilişkileri (200+ edge)
-├── .env                     # Ortam değişkenleri
-│
-├── 🏗️ MIMARI.md             # Teknik mimari
-├── 🚀 KURULUM_KILAVUZU.md   # Detaylı kurulum
-└── 📁 DOSYA_YAPISI.md       # Klasör yapısı
-```
-
-Detaylar: [DOSYA_YAPISI.md](DOSYA_YAPISI.md)
 
 ---
 
@@ -328,6 +332,9 @@ python test_gpu.py
 Proje içinde çeşitli test dosyaları bulunur:
 
 ```powershell
+# 🆕 Comprehensive system test (modular architecture)
+python test_system.py
+
 # GPU testi
 python test_gpu.py
 
@@ -341,6 +348,8 @@ python test_working_queries.py
 python check_ankara_data.py
 python check_meter_id.py
 ```
+
+**Yeni modular test:** `test_system.py` tüm modülleri, import'ları, GPU detection'ı, FastAPI routes'ları ve backwards compatibility'yi test eder.
 
 ---
 

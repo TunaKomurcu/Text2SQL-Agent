@@ -1,5 +1,8 @@
 # 🚀 Text2SQL - Detaylı Kurulum Kılavuzu
 
+> **Modern Modular System** - 6 katmanlı Clean Architecture yapısı  
+> **Mimari Detayları:** [MIMARI.md](MIMARI.md) | [DOSYA_YAPISI.md](DOSYA_YAPISI.md)
+
 ## 📋 İçindekiler
 1. [Sistem Gereksinimleri](#sistem-gereksinimleri)
 2. [Ön Hazırlık](#ön-hazırlık)
@@ -548,8 +551,6 @@ Aşağıdakilerin hepsi çalışmalı:
 - [ ] Chat'te "test" yazınca → Cevap geliyor
 
 ---
-
-## 📞 Yardım ve Destek
 
 Sorun yaşıyorsanız:
 

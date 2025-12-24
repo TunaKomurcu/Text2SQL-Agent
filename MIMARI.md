@@ -1,15 +1,56 @@
 # 🏗️ Text2SQL - Teknik Mimari Dokümantasyonu
 
+> **Modern Modular Architecture** - Clean Architecture prensipleri ile tasarlanmış 6 katmanlı mimari.
+
 ## 📋 İçindekiler
-1. [Sistem Mimarisi](#sistem-mimarisi)
-2. [Veri Akışı](#veri-akışı)
-3. [Bileşenler](#bileşenler)
-4. [Algoritmalar](#algoritmalar)
-5. [Veritabanı Yapısı](#veritabanı-yapısı)
+1. [Modüler Mimari](#modüler-mimari)
+2. [Sistem Mimarisi](#sistem-mimarisi)
+3. [Veri Akışı](#veri-akışı)
+4. [Bileşenler](#bileşenler)
+5. [Algoritmalar](#algoritmalar)
+6. [Veritabanı Yapısı](#veritabanı-yapısı)
 
 ---
 
-## 🏛️ Sistem Mimarisi
+## 🏗️ Modüler Mimari
+
+### Genel Bakış
+
+Text2SQL sistemi **Clean Architecture** prensipleri ile tasarlanmış 6 katmanlı modüler bir yapıya sahiptir:
+
+- **6 modüler katman**: `utils/`, `search/`, `schema/`, `sql/`, `core/`, `api/`
+- **25 özelleşmiş modül**: Her biri tek bir sorumluluğa sahip (ortalama 160 satır)
+- **Temiz bağımlılık yönü**: Üst katmanlar alt katmanlara bağımlı, tersi yok
+- **Test edilebilir**: Her modül bağımsız unit test'e uygun
+- **Ölçeklenebilir**: Yeni özellikler mevcut kodu bozmadan eklenebilir
+
+### Avantajlar
+
+- ✅ **SOLID Prensipleri**: Her modül tek sorumluluk prensibi ile tasarlandı
+- ✅ **Bağımsız Test**: Her katman mock'lanabilir ve izole test edilebilir
+- ✅ **Kolay Bakım**: Değişiklikler ilgili modülde lokalize kalır
+- ✅ **Düşük Coupling**: Katmanlar arası gevşek bağlantı
+- ✅ **Yüksek Cohesion**: İlgili fonksiyonalite aynı modülde
+- ✅ **Döngüsel Bağımlılık Yok**: Tek yönlü bağımlılık grafiği
+
+### Katman Yapısı
+
+```
+Presentation Layer (api/)     → FastAPI endpoints
+        ↓
+Business Logic (core/)        → SQL generation, LLM, prompts
+        ↓
+Domain Services (schema/, sql/, search/)  → Schema intelligence, SQL processing
+        ↓
+Infrastructure (utils/)       → GPU, DB, Qdrant, models
+        ↓
+External Services             → PostgreSQL, Qdrant, CUDA
+```
+
+
+---
+
+## �🏛️ Sistem Mimarisi
 
 ### High-Level Architecture
 

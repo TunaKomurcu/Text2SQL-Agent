@@ -407,7 +407,9 @@ rm -rf models/.cache && python build_vectorDB.py
 
 ---
 
+=======
 **Son Güncelleme**: Aralık 2025
+>>>>>>> 001cf0a72ef076e65ff852a33bd229df80b6fdb1
 
 **Sürüm**: 1.0
 

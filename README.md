@@ -2,7 +2,7 @@
 
 **Türkçe doğal dil sorgularını otomatik olarak SQL'e çeviren yapay zeka destekli sistem.**
 
-> SQL bilmeden veritabanınızdan veri çekin! Sadece sorunuzu sorun, sistem gerisini halleder.
+> SQL bilgisine ihtiyaç duymadan veritabanınızdan veri alın. Sorunuzu doğal dilde iletin, sistem sorguyu otomatik olarak oluştursun.
 
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.118-green)](https://fastapi.tiangolo.com/)
@@ -198,8 +198,8 @@ SQL PostgreSQL'de çalıştırılır ve sonuçlar kullanıcıya döner.
 
 | Metrik | Değer |
 |--------|-------|
-| Basit sorgular yanıt süresi | ~2-5 saniye |
-| Kompleks JOIN'li sorgular | ~5-10 saniye |
+| Basit sorgular yanıt süresi | ~10-20 saniye |
+| Kompleks JOIN'li sorgular | ~30-50 saniye |
 | GPU hızlanma | %70-80 daha hızlı |
 | Doğruluk oranı (basit) | ~95%+ |
 | Doğruluk oranı (orta) | ~80-85% |
@@ -316,8 +316,8 @@ Sistem otomatik olarak GPU'yu tespit eder ve kullanır:
 - **💻 GPU yoksa**: Otomatik olarak CPU'ya düşer (hata vermez)
 
 **Hız Karşılaştırması**:
-- CPU: ~10-20 saniye
-- GPU: ~2-5 saniye
+- CPU: ~20-70 saniye
+- GPU: ~10-20 saniye
 - **🚀 Hız Artışı: 3-4x**
 
 **Test etmek için**:
@@ -332,9 +332,6 @@ python test_gpu.py
 Proje içinde çeşitli test dosyaları bulunur:
 
 ```powershell
-# 🆕 Comprehensive system test (modular architecture)
-python test_system.py
-
 # GPU testi
 python test_gpu.py
 
@@ -348,8 +345,6 @@ python test_working_queries.py
 python check_ankara_data.py
 python check_meter_id.py
 ```
-
-**Yeni modular test:** `test_system.py` tüm modülleri, import'ları, GPU detection'ı, FastAPI routes'ları ve backwards compatibility'yi test eder.
 
 ---
 
@@ -377,20 +372,14 @@ docker-compose -f docker/docker-compose.yml down
 
 ## 📝 Örnek Sorgular
 
-Sistemde deneyebileceğiniz örnek sorgular:
+Sistemde deneyebileceğiniz genel örnek sorgular:
 
-- "Tüm tabloları listele"
-- "Ankara'daki sayaçları göster"
-- "Her ildeki sayaç sayısını hesapla"
-- "Son 2 saatlik yük profil verilerini getir"
-- "En çok elektrik tüketen 10 sayacı bul"
+- "Mevcut tüm tabloları listele"
+- "Belirli bir şehirdeki kayıtları göster"
+- "Her kategoriye göre kayıt sayısını hesapla"
+- "Son belirli bir zaman aralığındaki verileri getir"
+- "En yüksek değere sahip ilk 10 kaydı bul"
   
----
-
-## 📄 Lisans
-
-Bu proje MIT lisansı altında lisanslanmıştır.
-
 ---
 
 ## 🙏 Teşekkürler
